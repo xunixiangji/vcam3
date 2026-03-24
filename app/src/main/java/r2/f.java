@@ -16,9 +16,7 @@ public final class f implements b.f {
 
     @Override
     public final void a(b.e shellResult) {
-        // Forward to ApiManager.K() - extract fields from shell result
-        this.mApiManager.K(shellResult.a(), shellResult.c(),
-            shellResult.b() != null && !shellResult.b().isEmpty()
-                ? shellResult.b().get(0) : "");
+        // Forward shell result directly to ApiManager.K()
+        this.mApiManager.K(shellResult);
     }
 }
