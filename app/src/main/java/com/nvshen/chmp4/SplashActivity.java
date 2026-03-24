@@ -174,13 +174,27 @@ public class SplashActivity extends AppCompatActivity {
             public void run() {
                 try {
                     AlertDialog.Builder builder = new AlertDialog.Builder((Context) SplashActivity.this);
-                    builder.setTitle("Root Required");
-                    builder.setMessage(getString(R.string.check_selinux));
-                    builder.setPositiveButton("OK", new a());
+                    builder.setTitle("Root Not Detected");
+                    builder.setMessage("Root access not available. Hook injection will not work, but you can still browse the app.\n\nFor full functionality, please grant root access.");
+                    builder.setPositiveButton("Continue Anyway", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                            // Launch MainActivity even without root
+                            Intent intent = new Intent((Context) SplashActivity.this, MainActivity.class);
+                            startActivity(intent);
+                            finish();
+                        }
+                    });
+                    builder.setNegativeButton("Exit", new a());
                     builder.setCancelable(false);
                     builder.show();
                 } catch (Exception e) {
                     Log.e("CHMP4", "Error showing no-root dialog", e);
+                    // Fallback: just launch MainActivity
+                    Intent intent = new Intent((Context) SplashActivity.this, MainActivity.class);
+                    startActivity(intent);
+                    finish();
                 }
             }
         });
