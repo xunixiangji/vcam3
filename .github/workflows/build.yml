@@ -38,7 +38,7 @@ jobs:
           export PATH=~/bin:$PATH
           apktool b demo_source -o vcam-unsigned.apk --use-aapt2
 
-      - name: Sign APK (v1+v2+v3)
+      - name: Sign APK
         run: |
           # Generate debug keystore
           keytool -genkey -v -keystore debug.keystore \
@@ -46,23 +46,25 @@ jobs:
             -validity 10000 -storepass android -keypass android \
             -dname "CN=Debug,O=Debug,C=US"
 
-          # Zipalign first (required before apksigner)
-          zipalign -v -p 4 vcam-unsigned.apk vcam-aligned.apk
+          # Find Android build-tools for zipalign and apksigner
+          BUILD_TOOLS=$(ls -d $ANDROID_HOME/build-tools/*/ 2>/dev/null | tail -1)
+          echo "Build tools: $BUILD_TOOLS"
+          ls "$BUILD_TOOLS" | head -20
 
-          # Sign with apksigner (v1+v2+v3 schemes)
-          apksigner sign \
+          # Zipalign
+          "${BUILD_TOOLS}zipalign" -v -p 4 vcam-unsigned.apk vcam-aligned.apk
+
+          # Sign with apksigner (supports v2/v3)
+          "${BUILD_TOOLS}apksigner" sign \
             --ks debug.keystore \
             --ks-pass pass:android \
             --ks-key-alias debug \
             --key-pass pass:android \
-            --v1-signing-enabled true \
-            --v2-signing-enabled true \
-            --v3-signing-enabled true \
             --out vcam-final.apk \
             vcam-aligned.apk
 
           # Verify
-          apksigner verify --verbose vcam-final.apk
+          "${BUILD_TOOLS}apksigner" verify --verbose vcam-final.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
