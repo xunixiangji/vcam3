@@ -1164,11 +1164,14 @@ public class m extends Fragment {
             });
         }
 
-        // Populate video list
-        B1();
+        // Populate video list (delay to ensure su is authorized from SplashActivity)
+        mHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() { B1(); }
+        }, 2000);
 
         // Start status polling
-        mHandler.postDelayed(mStatusChecker, 1000);
+        mHandler.postDelayed(mStatusChecker, 3000);
     }
 
     /**
