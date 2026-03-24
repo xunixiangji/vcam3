@@ -625,33 +625,75 @@ public class d {
     public List<String> m() {
         List<String> videoList = new ArrayList<String>();
         try {
-            // Use root shell (s2.b.I) instead of non-root (s2.b.i) for Android 14 compatibility.
-            // Search both /sdcard/ and /storage/emulated/0/ paths to handle symlink differences.
-            String[] searchPaths = {
-                "/sdcard/Movies/", "/sdcard/DCIM/", "/sdcard/Download/",
-                "/storage/emulated/0/Movies/", "/storage/emulated/0/DCIM/", "/storage/emulated/0/Download/"
-            };
-            java.util.HashSet<String> seen = new java.util.HashSet<String>();
-            for (String searchPath : searchPaths) {
-                s2.b.e result = s2.b.I("find " + searchPath + " -iname \"*.mp4\" 2>/dev/null");
-                if (result != null && result.a() == 0) {
-                    String output = result.c();
-                    if (output != null && output.length() > 0) {
-                        String[] files = output.split("\n");
-                        for (String file : files) {
-                            String trimmed = file.trim();
-                            if (trimmed.length() > 0) {
-                                // Normalize path to avoid duplicates from symlinks
-                                String normalized = trimmed.replace("/sdcard/", "/storage/emulated/0/");
+            // Single consolidated find command via root shell for all common video locations.
+            // s2.b.I() already wraps in su, so no su prefix needed.
+            // Use -maxdepth 3 to avoid searching too deep.
+            // Search /storage/emulated/0/ (canonical path) to avoid /sdcard symlink issues.
+            String cmd = "find /storage/emulated/0/Movies /storage/emulated/0/DCIM /storage/emulated/0/Download "
+                + "-maxdepth 3 -type f \\( -iname '*.mp4' -o -iname '*.mkv' -o -iname '*.avi' \\) 2>/dev/null; "
+                + "find /sdcard/Movies /sdcard/DCIM /sdcard/Download "
+                + "-maxdepth 3 -type f \\( -iname '*.mp4' -o -iname '*.mkv' -o -iname '*.avi' \\) 2>/dev/null";
+            Log.d(TAG, "getVideoList cmd: " + cmd);
+            s2.b.e result = s2.b.I(cmd);
+            Log.d(TAG, "getVideoList exitCode: " + (result != null ? result.a() : "null"));
+            if (result != null) {
+                String output = result.c();
+                Log.d(TAG, "getVideoList output: [" + (output != null ? output : "null") + "]");
+                if (output != null && output.length() > 0) {
+                    java.util.HashSet<String> seen = new java.util.HashSet<String>();
+                    String[] files = output.split("\n");
+                    for (String file : files) {
+                        String trimmed = file.trim();
+                        if (trimmed.length() > 0 && trimmed.startsWith("/")) {
+                            // Normalize path to avoid duplicates from /sdcard -> /storage/emulated/0 symlink
+                            String normalized = trimmed.replace("/sdcard/", "/storage/emulated/0/");
+                            if (!seen.contains(normalized)) {
+                                seen.add(normalized);
+                                videoList.add(trimmed);
+                            }
+                        }
+                    }
+                }
+                // Also log stderr for debugging
+                List<String> stderrList = result.b();
+                if (stderrList != null && !stderrList.isEmpty()) {
+                    for (String err : stderrList) {
+                        Log.w(TAG, "getVideoList stderr: " + err);
+                    }
+                }
+            }
+
+            // Fallback: try ls if find returned nothing (some ROMs restrict find)
+            if (videoList.isEmpty()) {
+                Log.d(TAG, "getVideoList: find returned nothing, trying ls fallback");
+                String[] fallbackDirs = {
+                    "/storage/emulated/0/Movies",
+                    "/storage/emulated/0/DCIM",
+                    "/storage/emulated/0/Download",
+                    "/sdcard/Movies",
+                    "/sdcard/DCIM",
+                    "/sdcard/Download"
+                };
+                java.util.HashSet<String> seen = new java.util.HashSet<String>();
+                for (String dir : fallbackDirs) {
+                    s2.b.e lsResult = s2.b.I("ls " + dir + "/*.mp4 2>/dev/null");
+                    if (lsResult != null && lsResult.c() != null && lsResult.c().length() > 0) {
+                        String[] lsFiles = lsResult.c().split("\n");
+                        for (String f : lsFiles) {
+                            String t = f.trim();
+                            if (t.length() > 0 && t.startsWith("/") && !t.contains("No such file")) {
+                                String normalized = t.replace("/sdcard/", "/storage/emulated/0/");
                                 if (!seen.contains(normalized)) {
                                     seen.add(normalized);
-                                    videoList.add(trimmed);
+                                    videoList.add(t);
                                 }
                             }
                         }
                     }
                 }
             }
+
+            Log.d(TAG, "getVideoList: found " + videoList.size() + " files");
         } catch (Exception ex) {
             Log.e(TAG, "getVideoList error", ex);
         }

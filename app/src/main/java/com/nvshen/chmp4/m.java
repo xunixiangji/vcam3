@@ -25,6 +25,7 @@ import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.AdapterView;
 import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TextView;
@@ -66,7 +67,14 @@ public class m extends Fragment {
         @Override
         public void onClick(View view) {
             Log.d(TAG, "click ----------------------");
-            r1();
+            Activity act = getActivity();
+            if (act != null) {
+                Application app = act.getApplication();
+                h handler = new h(app, act);
+                handler.a(null, null);
+            } else {
+                r1();
+            }
         }
     }
 
@@ -131,13 +139,9 @@ public class m extends Fragment {
                 final Context ctx = getActivity();
                 if (ctx == null) return;
                 final String cacheDir = ctx.getCacheDir().getAbsolutePath();
-                String suPath = "su";
-                SharedPreferences prefs = ctx.getSharedPreferences("CHMP4", Context.MODE_PRIVATE);
-                if (prefs.getInt("su_type", 0) == 1) {
-                    suPath = "/sbin/su";
-                }
-                final String cmd = String.format("%s %s/sh %s/chmp4.sh resetCamera",
-                    suPath, cacheDir, cacheDir);
+                // s2.b.I() already wraps in su shell, no su prefix needed
+                final String cmd = String.format("%s/sh %s/chmp4.sh resetCamera",
+                    cacheDir, cacheDir);
                 Log.d("CHMP4PREVIEWFORMAT", cmd);
                 // Run on background thread to avoid ANR
                 new Thread(new Runnable() {
@@ -270,12 +274,28 @@ public class m extends Fragment {
          * 3. Start daemon injection
          */
         @Override
-        public void a(n2.e<?> observer, Button button) {
-            Log.d(TAG, "button_start_player ");
-            // Execute copy + selinux + inject chain
-            new MInnerHB().a(observer, button);
-            new MInnerHA(mActivity).a(observer, button);
-            r1(); // start daemon
+        public void a(final n2.e<?> observer, final Button button) {
+            Log.d(TAG, "button_start_player - full inject sequence");
+            com.nvshen.chmp4.d.B().Y("Injecting VCam...");
+            // Run copy + selinux on background thread, then inject
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    // Step 1: Copy files from assets
+                    new MInnerHB().a(observer, button);
+                    // Step 2: Set SELinux context
+                    new MInnerHA(mActivity).a(observer, button);
+                    // Step 3: Start daemon (r1() already runs on background via api.g())
+                    if (mActivity != null) {
+                        mActivity.runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                r1();
+                            }
+                        });
+                    }
+                }
+            }).start();
         }
     }
 
@@ -537,17 +557,17 @@ public class m extends Fragment {
             String cacheDir = ctx.getCacheDir().getAbsolutePath();
 
             if (isChecked) {
-                // Enable su via toggleSu
-                String cmd = String.format("%s %s/sh %s/chmp4.sh toggleSu", "su", cacheDir, cacheDir);
+                // Enable su via toggleSu - no su prefix, s2.b.I() wraps in su
+                String cmd = String.format("%s/sh %s/chmp4.sh toggleSu", cacheDir, cacheDir);
                 s2.b.I(cmd);
             } else {
                 // Disable su
-                String cmd = String.format("%s %s/sh %s/chmp4.sh toggleSu", "su", cacheDir, cacheDir);
+                String cmd = String.format("%s/sh %s/chmp4.sh toggleSu", cacheDir, cacheDir);
                 s2.b.I(cmd);
             }
 
             // Check su status
-            String checkCmd = String.format("%s %s/sh %s/chmp4.sh checkSu", "su", cacheDir, cacheDir);
+            String checkCmd = String.format("%s/sh %s/chmp4.sh checkSu", cacheDir, cacheDir);
             s2.b.e result = s2.b.I(checkCmd);
             int exitCode = result.a();
             Log.d(TAG, "checkSu exit: " + exitCode);
@@ -584,9 +604,9 @@ public class m extends Fragment {
          */
         @Override
         public void onClick(View view) {
-            int flip = mSpinner1.getSelectedItemPosition();
-            int rotate = mSpinner2.getSelectedItemPosition();
-            int heightPadding = mSpinner3.getSelectedItemPosition();
+            int flip = mSpinner1 != null ? mSpinner1.getSelectedItemPosition() : 0;
+            int rotate = mSpinner2 != null ? mSpinner2.getSelectedItemPosition() : 0;
+            int heightPadding = mSpinner3 != null ? mSpinner3.getSelectedItemPosition() : 0;
 
             // Save settings
             com.nvshen.chmp4.d api = com.nvshen.chmp4.d.B();
@@ -769,6 +789,17 @@ public class m extends Fragment {
                             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
                             spinner.setAdapter(adapter);
 
+                            // Set item selection listener to update daemon when video changes
+                            spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                                @Override
+                                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                                    Log.d(TAG, "Video selected: index=" + position);
+                                    com.nvshen.chmp4.d.B().R(position);
+                                }
+                                @Override
+                                public void onNothingSelected(AdapterView<?> parent) {}
+                            });
+
                             SharedPreferences prefs = activity.getSharedPreferences("CHMP4", Context.MODE_PRIVATE);
                             int savedIndex = prefs.getInt("index", 0);
                             if (savedIndex >= 0 && savedIndex < list.size()) {
@@ -861,7 +892,6 @@ public class m extends Fragment {
 
         com.nvshen.chmp4.d api = com.nvshen.chmp4.d.B();
         String cacheDir = ctx.getCacheDir().getAbsolutePath();
-        String suPath = "su";
 
         // Get current settings
         int remain = api.D(); // remainingDays
@@ -905,9 +935,15 @@ public class m extends Fragment {
             if (flip == 2) filterStr = filterStr + ",vflip";
         }
 
-        // Build the command: "%s%s/sh %s/chmp4.sh initchmp4 %d %d %s %s %s"
-        String command = String.format("%s %s/sh %s/chmp4.sh initchmp4 %d %d %s %s %s",
-            suPath, cacheDir, cacheDir, remain, now, token, mp4file, filterStr);
+        if (mp4file.isEmpty()) {
+            Log.e(TAG, "r1: No video file selected! Refresh video list first.");
+            com.nvshen.chmp4.d.B().Y("No video file selected. Place .mp4 files in /sdcard/Movies/");
+            return;
+        }
+
+        // Build the command without su prefix - s2.b.I() already wraps in su shell
+        String command = String.format("%s/sh %s/chmp4.sh initchmp4 %d %d %s %s %s",
+            cacheDir, cacheDir, remain, now, token, mp4file, filterStr);
 
         Log.d(TAG, "r1: " + command);
 
@@ -933,8 +969,8 @@ public class m extends Fragment {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                String suPath = "su";
-                String cmd = String.format("%s %s/sh %s/chmp4.sh resetCamera", suPath, cacheDir, cacheDir);
+                // No su prefix needed - s2.b.I() already wraps in su shell
+                String cmd = String.format("%s/sh %s/chmp4.sh resetCamera", cacheDir, cacheDir);
                 Log.d(TAG, "s1: " + cmd);
                 s2.b.I(cmd);
                 if (getActivity() != null) {
@@ -987,14 +1023,16 @@ public class m extends Fragment {
         // ---- "Replace Camera" (inject) button ----
         Button btnSettings = (Button) view.findViewById(R.id.button_settings);
         if (btnSettings != null) {
-            // Use n2.e observer pattern with h inner class handler
-            n2.e<Button> observer = new n2.e<Button>();
-            h handler = new h(app, activity);
-            // c wraps the handler with an inner delegate
-            c wrapper = new c(handler);
-            observer.a(wrapper);
-            btnSettings.setOnClickListener(new a());
-            sButtonObserver = observer;
+            final Application finalApp = app;
+            final Activity finalActivity = activity;
+            btnSettings.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Log.d(TAG, "button_settings: Replace Camera clicked");
+                    h handler = new h(finalApp, finalActivity);
+                    handler.a(null, null);
+                }
+            });
         }
 
         // ---- "Reset Camera" (stop) button ----
@@ -1003,6 +1041,8 @@ public class m extends Fragment {
             btnClose.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    Log.d(TAG, "button_close: Reset Camera clicked");
+                    com.nvshen.chmp4.d.B().Y("Resetting camera...");
                     new MInnerE().a(null, null);
                 }
             });
@@ -1019,7 +1059,13 @@ public class m extends Fragment {
         // ---- "Start Player" button ----
         Button btnStartPlayer = (Button) view.findViewById(R.id.button_start_player);
         if (btnStartPlayer != null) {
-            btnStartPlayer.setOnClickListener(new a());
+            btnStartPlayer.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Log.d(TAG, "button_start_player: Start Player clicked");
+                    r1();
+                }
+            });
         }
 
         // ---- "Stop Player" button ----
@@ -1028,6 +1074,8 @@ public class m extends Fragment {
             btnStopPlayer.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    Log.d(TAG, "button_stop_player: Stop Player clicked");
+                    com.nvshen.chmp4.d.B().Y("Stopping player...");
                     new d().a(null, null);
                 }
             });
@@ -1075,14 +1123,35 @@ public class m extends Fragment {
         // ---- Preview buttons ----
         Button btnStartPreview = (Button) view.findViewById(R.id.button_start_preview);
         if (btnStartPreview != null) {
-            // Apply settings and start preview
-            btnStartPreview.setOnClickListener(new v(
-                flipSpinner, activity, rotateSpinner, heightPaddingSpinner, null, null));
+            final Spinner fFlip = flipSpinner;
+            final Spinner fRotate = rotateSpinner;
+            final Spinner fPadding = heightPaddingSpinner;
+            final Activity fActivity = activity;
+            // Apply settings then navigate to camera preview
+            btnStartPreview.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Log.d(TAG, "button_start_preview clicked");
+                    // Apply settings first
+                    new m.v(fFlip, fActivity, fRotate, fPadding, null, null).onClick(v);
+                    // Then navigate to camera tab
+                    if (fActivity instanceof com.nvshen.chmp4.MainActivity) {
+                        ((com.nvshen.chmp4.MainActivity) fActivity).O(1);
+                    }
+                }
+            });
         }
 
         Button btnStopPreview = (Button) view.findViewById(R.id.button_stop_preview);
         if (btnStopPreview != null) {
-            btnStopPreview.setOnClickListener(new s());
+            btnStopPreview.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Log.d(TAG, "button_stop_preview clicked");
+                    A1(); // refresh status
+                    B1(); // refresh video list
+                }
+            });
         }
 
         // Populate video list
