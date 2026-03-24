@@ -11,316 +11,256 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import com.nmmedit.protect.NativeUtil;
 import com.telegram.a1064.R;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import k2.o;
+import java.io.InputStreamReader;
 
 /**
- * SplashActivity - Entry point activity
- * Handles root check, SELinux, native binary setup, then launches MainActivity.
+ * SplashActivity - RESTORED matching original demo behavior
+ * Root flow: libsu/Magisk prompt → SELinux check → copy binaries → MainActivity
+ * No root: show "无法获得root权限" dialog with su path input
  */
 public class SplashActivity extends AppCompatActivity {
 
-    public static int sInitState;
+    private static final String TAG = "CHMP4";
+    public static int sInitState = 1;
     private int mSetupStep = 0;
 
-    // Inner class: Error dialog dismiss handler
-    class a implements DialogInterface.OnClickListener {
-        { NativeUtil.classesInit0(54); }
-        a() {}
-
-        /**
-         * Recovered from method_145 @ 0x13050 (size=79)
-         * Dismisses dialog and finishes activity.
-         */
-        @Override
-        public void onClick(DialogInterface dialog, int which) {
-            dialog.dismiss();
-            SplashActivity.this.finish();
-        }
+    static {
+        NativeUtil.classesInit0(39);
     }
 
-    // Inner class: Setup/activate button click handler
-    class b implements View.OnClickListener {
-        final EditText mInputField;
-        final Activity mActivity;
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_splash);
+        // Start root check
+        I();
+    }
 
-        { NativeUtil.classesInit0(53); }
+    /**
+     * I() - initSetup: try to get root via "su" command
+     * This triggers Magisk/KSU authorization prompt
+     */
+    private void I() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    // Try "su" - this triggers Magisk/KSU auth dialog
+                    Process process = Runtime.getRuntime().exec("su");
+                    process.getOutputStream().write("id\n".getBytes());
+                    process.getOutputStream().write("exit\n".getBytes());
+                    process.getOutputStream().flush();
+                    int exitCode = process.waitFor();
 
-        b(EditText input, Activity activity) {
-            this.mInputField = input;
-            this.mActivity = activity;
-        }
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+                    String output = reader.readLine();
+                    reader.close();
 
-        /**
-         * Recovered from method_144 @ 0x12fc0 (size=73)
-         * Handles activation code submission from splash screen.
-         */
-        @Override
-        public void onClick(View view) {
-            if (this.mInputField != null) {
-                String code = this.mInputField.getText().toString().trim();
-                if (!code.isEmpty()) {
-                    Log.d("CHMP4", "Activation code entered: " + code);
-                    com.nvshen.chmp4.d.B().f(code, new com.nvshen.chmp4.d.f() {
+                    if (exitCode == 0 && output != null && output.contains("uid=0")) {
+                        // Root granted! Proceed with setup
+                        J("su");
+                    } else {
+                        // Root denied or not available
+                        M();
+                    }
+                } catch (Exception e) {
+                    Log.e(TAG, "Root check failed", e);
+                    M();
+                }
+            }
+        }).start();
+    }
+
+    /**
+     * J(suPath) - onRootResult: root obtained, check SELinux, copy files, launch MainActivity
+     */
+    public void J(String suPath) {
+        try {
+            // Check SELinux
+            String getenforce = execCmd(suPath, "getenforce");
+            if (getenforce != null && getenforce.contains("Enforcing")) {
+                execCmd(suPath, "setenforce 0");
+                String check = execCmd(suPath, "getenforce");
+                if (check != null && check.contains("Permissive")) {
+                    execCmd(suPath, "setenforce 1"); // test: can restore
+                } else {
+                    Log.e("HOOK", "setenforce 0 fail!");
+                    runOnUiThread(new Runnable() {
                         @Override
-                        public void a(int resultCode) {
-                            Log.d("CHMP4", "Activation result: " + resultCode);
-                            if (resultCode == 200) {
-                                // Success - proceed to setup
-                                SplashActivity.this.I();
-                            }
+                        public void run() {
+                            Toast.makeText(SplashActivity.this,
+                                getString(R.string.check_selinux), Toast.LENGTH_LONG).show();
                         }
                     });
                 }
             }
-        }
-    }
 
-    static {
-        NativeUtil.classesInit0(39);
-        s2.b.f5887c = false;
-        s2.b.N(new s2.b.a().b(8).c(10L));
-        sInitState = 1;
-    }
+            // Copy native binaries
+            os12copyfile();
 
-    /**
-     * I() - initSetup()
-     * Recovered from method_112 @ 0x12094 (size=32)
-     * Starts the permission/root check flow.
-     */
-    private void I() {
-        // Request root shell and proceed with setup
-        s2.b.e result = s2.b.I("su");
-        result.a(new s2.b.f() {
-            @Override
-            public void a(s2.b.e result2) {
-                try {
-                    SplashActivity.this.J(s2.b.I("su"));
-                } catch (Throwable t) {
-                    Log.e("CHMP4", "Root check failed", t);
-                    SplashActivity.this.M();
+            // Launch MainActivity
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Intent intent = new Intent(SplashActivity.this, MainActivity.class);
+                    startActivity(intent);
+                    finish();
                 }
-            }
-        });
-    }
-
-    /**
-     * J(shell) - onRootResult()
-     * Already decompiled - checks SELinux, copies files, launches MainActivity.
-     */
-    public void J(s2.b.e shell) throws Throwable {
-        if (!shell.M()) {
+            });
+        } catch (Throwable t) {
+            Log.e(TAG, "Setup failed after root", t);
             M();
-            return;
-        }
-        String getenforceOutput = s2.b.I("getenforce").c();
-        if (getenforceOutput != null && getenforceOutput.contains("Enforcing")) {
-            s2.b.I("setenforce 0");
-            String getenforceOutput2 = s2.b.I("getenforce").c();
-            if (getenforceOutput2 != null && getenforceOutput2.contains("Permissive")) {
-                s2.b.I("setenforce 1");
-            } else {
-                Log.e("HOOK", "setenforce 0 fail!");
-                o.j(getString(R.string.check_selinux));
-            }
-        }
-        Intent intent = new Intent((Context) this, MainActivity.class);
-        os12copyfile();
-        startActivity(intent);
-        finish();
-    }
-
-    /**
-     * K(context) - extractAssets()
-     * Recovered from method_111 @ 0x1200c (size=0)
-     * Static method to extract assets to cache directory.
-     */
-    public static void K(Context context) {
-        try {
-            // Copy shell binary
-            String cacheDir = context.getCacheDir().getAbsolutePath();
-            releaseAssetToCacheDir(context, isos64bit() ? "bin64/sh" : "bin/sh", "sh");
-            // Make shell executable
-            Runtime.getRuntime().exec("chmod +x " + cacheDir + "/sh").waitFor();
-        } catch (Throwable e) {
-            Log.e("CHMP4", "extractAssets failed", e);
         }
     }
 
     /**
-     * L() - showSetupUI()
-     * Recovered from method_107 @ 0x11e14 (size=0)
-     * Shows the setup/splash UI.
-     */
-    private void L() {
-        setContentView(R.layout.activity_splash);
-        // UI is handled by onCreate flow
-    }
-
-    /**
-     * M() - showNoRootDialog()
-     * Recovered from method_108 @ 0x11e9c (size=38)
-     * Shows error dialog when root is unavailable.
+     * M() - showNoRootDialog: matches original demo exactly
+     * Shows "无法获得root权限" with su path input field
      */
     void M() {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    AlertDialog.Builder builder = new AlertDialog.Builder((Context) SplashActivity.this);
+                    AlertDialog.Builder builder = new AlertDialog.Builder(SplashActivity.this);
                     builder.setTitle("\u65e0\u6cd5\u83b7\u5f97root\u6743\u9650"); // 无法获得root权限
-                    final EditText input = new EditText((Context) SplashActivity.this);
+                    builder.setIcon(android.R.drawable.ic_dialog_alert);
+
+                    final EditText input = new EditText(SplashActivity.this);
                     input.setHint("\u8bf7\u8f93\u5165su\u8def\u5f84"); // 请输入su路径
                     builder.setView(input);
+
+                    // ✔ button - try with custom su path
                     builder.setPositiveButton("\u2714", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            String suPath = input.getText().toString().trim();
+                            final String suPath = input.getText().toString().trim();
                             if (!suPath.isEmpty()) {
-                                // Try with custom su path
-                                try {
-                                    SplashActivity.this.J(s2.b.I(suPath));
-                                } catch (Throwable t) {
-                                    Log.e("CHMP4", "Custom su path failed", t);
-                                    dialog.dismiss();
-                                    SplashActivity.this.finish();
-                                }
-                            } else {
                                 dialog.dismiss();
-                                SplashActivity.this.finish();
+                                new Thread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        try {
+                                            Process p = Runtime.getRuntime().exec(suPath);
+                                            p.getOutputStream().write("id\n".getBytes());
+                                            p.getOutputStream().write("exit\n".getBytes());
+                                            p.getOutputStream().flush();
+                                            int code = p.waitFor();
+                                            if (code == 0) {
+                                                J(suPath);
+                                            } else {
+                                                M(); // show dialog again
+                                            }
+                                        } catch (Exception e2) {
+                                            Log.e(TAG, "Custom su failed", e2);
+                                            M();
+                                        }
+                                    }
+                                }).start();
                             }
                         }
                     });
-                    builder.setNegativeButton("\u2718", new a());
+
+                    // ✘ button - exit app
+                    builder.setNegativeButton("\u2718", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                            SplashActivity.this.finish();
+                        }
+                    });
+
                     builder.setCancelable(false);
                     builder.show();
-                } catch (Exception e2) {
-                    Log.e("CHMP4", "Error showing no-root dialog", e2);
+                } catch (Exception e) {
+                    Log.e(TAG, "Error showing root dialog", e);
                 }
             }
         });
     }
 
-    /**
-     * onCreate()
-     * Recovered from method_109 @ 0x11f10 (size=98)
-     * Initializes splash screen and starts setup flow.
-     */
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        L();
-        // Request permissions first
-        if (Build.VERSION.SDK_INT >= 23) {
-            String[] permissions = {
-                "android.permission.CAMERA",
-                "android.permission.READ_EXTERNAL_STORAGE",
-                "android.permission.SYSTEM_ALERT_WINDOW"
-            };
-            requestPermissions(permissions, 0x7f100036);
-        } else {
-            I();
-        }
-    }
-
-    /**
-     * onRequestPermissionsResult()
-     * Recovered from method_110 @ 0x11f90 (size=101)
-     * Handles permission grant results, then proceeds to setup.
-     */
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == 0x7f100036) {
-            boolean allGranted = true;
-            if (grantResults != null) {
-                for (int result : grantResults) {
-                    if (result != 0) {
-                        allGranted = false;
-                        break;
-                    }
-                }
+        if (requestCode == 1) {
+            I(); // retry after permission grant
+        }
+    }
+
+    /** Execute a command via su and return output */
+    private String execCmd(String suPath, String command) {
+        try {
+            Process p = Runtime.getRuntime().exec(new String[]{suPath, "-c", command});
+            BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                sb.append(line);
             }
-            if (allGranted) {
-                Log.d("CHMP4", "PERMISSION_GRANTED-----------------");
-                I();
-            } else {
-                Log.e("CHMP4", "PERMISSION_DENIED------------2-------------");
-                // Re-request or show explanation
-                M();
-            }
+            reader.close();
+            p.waitFor();
+            return sb.toString();
+        } catch (Exception e) {
+            return null;
         }
     }
 
     /** Check if device supports 64-bit ARM */
     public static boolean isos64bit() {
         for (String abi : Build.SUPPORTED_ABIS) {
-            if (abi.contains("arm64")) {
-                return true;
-            }
+            if (abi.contains("arm64")) return true;
         }
         return false;
     }
 
-    /** Copy an asset file to the app's cache directory */
+    /** Copy asset file to cache directory */
     public static boolean releaseAssetToCacheDir(Context context, String assetPath, String outputName) throws Throwable {
-        FileOutputStream fos;
         AssetManager assets = context.getAssets();
         InputStream is = null;
-        try {
-            fos = new FileOutputStream(new File(context.getCacheDir(), outputName));
-        } catch (IOException unused) {
-            fos = null;
-        } catch (Throwable th) {
-            fos = null;
-            throw th;
-        }
+        FileOutputStream fos = null;
         try {
             is = assets.open(assetPath);
+            fos = new FileOutputStream(new File(context.getCacheDir(), outputName));
             byte[] buffer = new byte[1024];
-            while (true) {
-                int bytesRead = is.read(buffer);
-                if (bytesRead == -1) break;
+            int bytesRead;
+            while ((bytesRead = is.read(buffer)) != -1) {
                 fos.write(buffer, 0, bytesRead);
             }
-            if (is != null) try { is.close(); } catch (IOException ignored) {}
-            try { fos.close(); } catch (IOException ignored) {}
             return true;
-        } catch (IOException unused2) {
+        } catch (IOException e) {
+            return false;
+        } finally {
             if (is != null) try { is.close(); } catch (IOException ignored) {}
-            if (fos == null) return false;
-            try { fos.close(); return false; } catch (IOException ignored) { return false; }
+            if (fos != null) try { fos.close(); } catch (IOException ignored) {}
         }
     }
 
-    /**
-     * os12copyfile() - Android 12 specific binary copy
-     * Copies 4 native files from APK assets to cache dir.
-     */
+    /** Copy daemon + hook binaries from assets (Android 12+) */
     public void os12copyfile() throws Throwable {
-        if (Build.VERSION.RELEASE.equals("12")) {
-            Context ctx = getApplicationContext();
-            String dir = isos64bit() ? "bin64" : "bin";
-            String suffix = isos64bit() ? "1364" : "1032";
+        Context ctx = getApplicationContext();
+        String dir = isos64bit() ? "bin64" : "bin";
+        String suffix = isos64bit() ? "1364" : "1032";
 
-            String[] names = {"CHMP4", "libCHMP4", "libhookProxy", "libshadowhook"};
-            for (int i = 0; i < 4; i++) {
-                String assetPath, outputName;
-                if (i > 0) {
-                    assetPath = String.format("%s/%s-%s.so", dir, names[i], suffix);
-                    outputName = names[i] + ".so";
-                } else {
-                    assetPath = String.format("%s/%s-%s", dir, names[i], suffix);
-                    outputName = names[i];
-                }
-                releaseAssetToCacheDir(ctx, assetPath, outputName);
+        String[] names = {"CHMP4", "libCHMP4", "libhookProxy", "libshadowhook"};
+        for (int i = 0; i < 4; i++) {
+            String assetPath, outputName;
+            if (i > 0) {
+                assetPath = String.format("%s/%s-%s.so", dir, names[i], suffix);
+                outputName = names[i] + ".so";
+            } else {
+                assetPath = String.format("%s/%s-%s", dir, names[i], suffix);
+                outputName = names[i];
             }
+            releaseAssetToCacheDir(ctx, assetPath, outputName);
         }
     }
 }
