@@ -6,10 +6,13 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MenuItem;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
-import com.ashokvarma.bottomnavigation.BottomNavigationBar;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.nmmedit.protect.NativeUtil;
 import com.telegram.a1064.R;
 
@@ -209,27 +212,29 @@ public class MainActivity extends AppCompatActivity {
      * Switches to the fragment at given tab index.
      */
     public void O(int tabIndex) {
-        FragmentManager fm = getSupportFragmentManager();
-        FragmentTransaction transaction = fm.beginTransaction();
-        // Hide all fragments, show selected
+        Fragment fragment = null;
         switch (tabIndex) {
             case 0:
-                // Camera preview fragment
+                fragment = new m(); // SettingsFragment as camera placeholder for now
                 Log.d("CHMP4", "Switching to Camera tab");
                 break;
             case 1:
-                // Settings fragment
+                fragment = new m(); // SettingsFragment
                 Log.d("CHMP4", "Switching to Settings tab");
                 break;
             case 2:
-                // WebView fragment
+                fragment = new m(); // SettingsFragment as webview placeholder
                 Log.d("CHMP4", "Switching to WebView tab");
                 break;
         }
-        try {
-            transaction.commitAllowingStateLoss();
-        } catch (Exception e) {
-            Log.e("CHMP4", "Fragment switch failed", e);
+        if (fragment != null) {
+            try {
+                getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.fragment_container, fragment)
+                    .commitAllowingStateLoss();
+            } catch (Exception e) {
+                Log.e("CHMP4", "Fragment switch failed", e);
+            }
         }
     }
 
@@ -382,14 +387,27 @@ public class MainActivity extends AppCompatActivity {
         // Initialize API manager
         com.nvshen.chmp4.d.B().S((Context) this);
 
-        // Setup bottom navigation
-        BottomNavigationBar bottomNav = (BottomNavigationBar) findViewById(R.id.bottom_navigation_bar);
+        // Setup bottom navigation with Material BottomNavigationView
+        BottomNavigationView bottomNav = findViewById(R.id.bottom_navigation_bar);
         if (bottomNav != null) {
-            bottomNav.a(new c(getSupportFragmentManager()));
+            bottomNav.setOnItemSelectedListener(new BottomNavigationView.OnItemSelectedListener() {
+                @Override
+                public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                    int id = item.getItemId();
+                    if (id == R.id.nav_camera) {
+                        O(0);
+                    } else if (id == R.id.nav_settings) {
+                        O(1);
+                    } else if (id == R.id.nav_help) {
+                        O(2);
+                    }
+                    return true;
+                }
+            });
         }
 
-        // Switch to default tab (Camera = 0)
-        O(0);
+        // Switch to default tab (Settings = 1, most useful for testing)
+        O(1);
 
         // Start update check
         R();
