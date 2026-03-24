@@ -87,41 +87,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    // Inner class: Bottom navigation tab listener
-    class c implements BottomNavigationBar.c {
-        final FragmentManager mFragmentManager;
-
-        { NativeUtil.classesInit0(50); }
-
-        c(FragmentManager fm) { this.mFragmentManager = fm; }
-
-        /**
-         * Recovered from method_128 @ 0x127e8 (size=0)
-         * onTabSelected - switches to the selected fragment.
-         */
-        @Override
-        public void a(int tabIndex) {
-            O(tabIndex);
-        }
-
-        /**
-         * Recovered from method_129 @ 0x1284c (size=49)
-         * onTabUnselected - no action needed.
-         */
-        @Override
-        public void b(int tabIndex) {
-            // Tab unselected - no action
-        }
-
-        /**
-         * Recovered from method_127 @ 0x1277c (size=14)
-         * onTabReselected - no action needed.
-         */
-        @Override
-        public void c(int tabIndex) {
-            // Tab reselected - no action
-        }
-    }
+    // Bottom navigation tab listener (now handled inline in onCreate via BottomNavigationView)
 
     // Inner class: Show update dialog (Runnable)
     class d implements Runnable {
