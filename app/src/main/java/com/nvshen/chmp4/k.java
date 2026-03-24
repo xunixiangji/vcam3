@@ -5,130 +5,258 @@ import android.os.IBinder;
 import android.os.Parcel;
 import android.util.Log;
 
+import java.lang.reflect.Method;
+
 /**
- * ServiceManager (class k) - RESTORED FROM nmmp BYTECODE
- * Singleton Binder service manager for daemon IPC
+ * ServiceManager (class k) - FULLY RESTORED FROM nmmp BYTECODE
+ * Singleton Binder Service Manager for daemon IPC
+ *
+ * Manages the Binder IPC connection between the app and the daemon/hook.
+ * Creates and registers a BinderService (class i) as a system service,
+ * enabling cross-process communication with the injected hook in cameraserver.
+ *
+ * Transaction protocol (from binder_service.cpp):
+ *   code 0: Register client binder - sends our binder to daemon
+ *   code 1: License verification
+ *   code 2: Sub-command dispatch (1=setVideoPath, 2=setFilter, 3=getFrame)
+ *   code 3: test_setSwapJpegWH
+ *   code 4: test_toggleCamera
+ *   code 5: test_setHeightPadding
  */
 public class k {
 
     private static final String TAG = "CHMP4";
-    private static k sInstance;
-    private i mBinderService;
-    private IBinder mRemoteBinder;
-    private int mStatus = 0;
+    private static final String SERVICE_NAME = "CHMP4PlayerService";
 
-    private k() {
-        a(); // init
-    }
+    private static k sInstance;           // f3528d
+    private IBinder mRemoteBinder;        // f3529a
+    private int mStatus = 0;             // f3530b
+    i mLocalBinder = new i();            // f3531c - creates BinderService on init
 
-    // getInstance
+    // ===== getInstance() - returns singleton ServiceManager =====
     static k c() {
         if (sInstance == null) {
-            sInstance = new k();
+            synchronized (k.class) {
+                if (sInstance == null) {
+                    sInstance = new k();
+                    sInstance.a();
+                }
+            }
         }
         return sInstance;
     }
 
-    // init - create binder service
+    /**
+     * init() - registers Binder service with Android ServiceManager
+     * Uses reflection to call android.os.ServiceManager.addService()
+     */
     private void a() {
-        mBinderService = new i();
-        // Register with Android ServiceManager (hidden API)
         try {
             Class<?> sm = Class.forName("android.os.ServiceManager");
-            sm.getMethod("addService", String.class, IBinder.class)
-              .invoke(null, "CHMP4PlayerService", mBinderService);
-        } catch (Exception e) {
-            Log.e(TAG, "Failed to register binder service", e);
+            Method addService = sm.getDeclaredMethod("addService", String.class, IBinder.class);
+            addService.setAccessible(true);
+            addService.invoke(null, SERVICE_NAME, mLocalBinder);
+            Log.e(TAG, "regCb " + SERVICE_NAME);
+        } catch (Exception ex) {
+            Log.e(TAG, "regCb error:" + ex.getMessage());
         }
     }
 
-    // refresh - re-establish connection
-    public void b() {
+    /**
+     * refresh() / reconnect() - refreshes the Binder connection
+     * Looks up the remote CHMP4PlayerService binder via ServiceManager.getService()
+     * Then registers our local binder with the daemon by sending transaction code 0
+     */
+    public IBinder b() {
         try {
             Class<?> sm = Class.forName("android.os.ServiceManager");
-            mRemoteBinder = (IBinder) sm.getMethod("getService", String.class)
-                .invoke(null, "CHMP4PlayerService");
-        } catch (Exception e) {
-            Log.e(TAG, "Failed to get binder service", e);
+            Method getService = sm.getDeclaredMethod("getService", String.class);
+            getService.setAccessible(true);
+
+            String serviceName = SERVICE_NAME;
+            // Check for custom service name in environment
+            String nservice = System.getenv("nservice");
+            if (nservice != null && nservice.length() > 0) {
+                serviceName = nservice;
+            }
+
+            mRemoteBinder = (IBinder) getService.invoke(null, serviceName);
+            Log.e(TAG, "binder = " + mRemoteBinder);
+
+            if (mRemoteBinder != null && mRemoteBinder.isBinderAlive()) {
+                // Register our local binder with the daemon (transaction code 0)
+                Parcel data = Parcel.obtain();
+                Parcel reply = Parcel.obtain();
+                data.writeStrongBinder(mLocalBinder);
+                mRemoteBinder.transact(0, data, reply, 0);
+                int status = reply.readInt();
+                data.recycle();
+                reply.recycle();
+                mStatus = 1;
+            } else {
+                mStatus = 0;
+            }
+        } catch (Exception ex) {
+            Log.e(TAG, "service " + ex.getMessage());
+            mStatus = 0;
         }
+        return mRemoteBinder;
     }
 
-    // getStatus
-    public int d() { return mStatus; }
+    /** getStatus() -> connection status (0 = not connected, 1 = connected) */
+    public int d() {
+        if (mRemoteBinder != null && mRemoteBinder.isBinderAlive()) {
+            return mStatus;
+        }
+        return 0;
+    }
 
-    // queryService
+    /**
+     * queryService(binder) -> service info string
+     * Sends transaction code 0 to given binder and reads response
+     */
     public String e(IBinder binder) {
         if (binder == null) return "";
         try {
             Parcel data = Parcel.obtain();
             Parcel reply = Parcel.obtain();
-            binder.transact(1, data, reply, 0);
+            data.writeStrongBinder(mLocalBinder);
+            binder.transact(0, data, reply, 0);
             String result = reply.readString();
             data.recycle();
             reply.recycle();
             return result != null ? result : "";
-        } catch (Exception e) {
+        } catch (Exception ex) {
+            Log.e(TAG, "queryService failed", ex);
             return "";
         }
     }
 
-    // cleanup
+    /** cleanup() - unregisters Binder service */
     private void f() {
-        mRemoteBinder = null;
+        try {
+            Class<?> sm = Class.forName("android.os.ServiceManager");
+            // There's no removeService in public API, just null the reference
+            mRemoteBinder = null;
+            mStatus = 0;
+        } catch (Exception ex) {
+            Log.e(TAG, "cleanup failed", ex);
+        }
     }
 
-    // sendCommand
+    /**
+     * sendCommand(command) -> response string
+     * Sends a command string to the daemon via binder transaction code 2, sub-command 1
+     * (setVideoPath)
+     */
     public String g(String command) {
-        if (mRemoteBinder == null) return "";
+        if (mRemoteBinder == null || !mRemoteBinder.isBinderAlive()) {
+            Log.e(TAG, "binder send fail");
+            return "";
+        }
         try {
             Parcel data = Parcel.obtain();
             Parcel reply = Parcel.obtain();
+            data.writeInt(1); // sub-command 1 = setVideoPath
             data.writeString(command);
             mRemoteBinder.transact(2, data, reply, 0);
-            String result = reply.readString();
+            int result = reply.readInt();
             data.recycle();
             reply.recycle();
-            return result != null ? result : "";
-        } catch (Exception e) {
-            Log.e(TAG, "sendCommand failed", e);
+            return String.valueOf(result);
+        } catch (Exception ex) {
+            Log.e(TAG, "sendCommand failed: " + ex.getMessage());
             return "";
         }
     }
 
-    // queryValue
+    /**
+     * queryValue(key) -> value string
+     * Sends a query string via binder transaction code 2, sub-command 2 (setFilter)
+     */
     public String h(String key) {
-        if (mRemoteBinder == null) return "";
+        if (mRemoteBinder == null || !mRemoteBinder.isBinderAlive()) {
+            return "";
+        }
         try {
             Parcel data = Parcel.obtain();
             Parcel reply = Parcel.obtain();
+            data.writeInt(2); // sub-command 2 = setFilter
             data.writeString(key);
-            mRemoteBinder.transact(3, data, reply, 0);
-            String result = reply.readString();
+            mRemoteBinder.transact(2, data, reply, 0);
+            int result = reply.readInt();
             data.recycle();
             reply.recycle();
-            return result != null ? result : "";
-        } catch (Exception e) {
+            return String.valueOf(result);
+        } catch (Exception ex) {
+            Log.e(TAG, "queryValue failed", ex);
             return "";
         }
     }
 
-    // transact with int code
-    public int i(int code) {
-        if (mRemoteBinder == null) return -1;
+    /**
+     * transact(code) -> result int
+     * Sends a direct transaction with given code to the remote binder
+     */
+    public int i(int transactionCode) {
+        if (mRemoteBinder == null || !mRemoteBinder.isBinderAlive()) {
+            return -1;
+        }
         try {
             Parcel data = Parcel.obtain();
             Parcel reply = Parcel.obtain();
-            mRemoteBinder.transact(code, data, reply, 0);
+            data.writeInt(0);
+            mRemoteBinder.transact(transactionCode, data, reply, 0);
             int result = reply.readInt();
             data.recycle();
             reply.recycle();
             return result;
-        } catch (Exception e) {
+        } catch (Exception ex) {
+            Log.e(TAG, "transact failed: code=" + transactionCode, ex);
             return -1;
         }
     }
 
-    public String j(int code) { return ""; }
-    public String k(int code) { return ""; }
-    public int l() { return mStatus; }
+    /**
+     * getTransactionName(code) -> name string
+     * Returns a descriptive name for the given transaction code
+     */
+    public String j(int transactionCode) {
+        switch (transactionCode) {
+            case 0: return "registerClient";
+            case 1: return "licenseVerify";
+            case 2: return "subCommand";
+            case 3: return "setSwapJpegWH";
+            case 4: return "toggleCamera";
+            case 5: return "setHeightPadding";
+            default: return "";
+        }
+    }
+
+    /**
+     * getTransactionData(code) -> data string
+     * Queries data for the given transaction code from the daemon
+     */
+    public String k(int transactionCode) {
+        if (mRemoteBinder == null || !mRemoteBinder.isBinderAlive()) {
+            return "";
+        }
+        try {
+            Parcel data = Parcel.obtain();
+            Parcel reply = Parcel.obtain();
+            data.writeInt(transactionCode);
+            mRemoteBinder.transact(transactionCode, data, reply, 0);
+            String result = reply.readString();
+            data.recycle();
+            reply.recycle();
+            return result != null ? result : "";
+        } catch (Exception ex) {
+            return "";
+        }
+    }
+
+    /** getConnectionCount() */
+    public int l() {
+        return mStatus;
+    }
 }

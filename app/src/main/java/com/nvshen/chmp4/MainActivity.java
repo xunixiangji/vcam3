@@ -181,15 +181,15 @@ public class MainActivity extends AppCompatActivity {
         Fragment fragment = null;
         switch (tabIndex) {
             case 0:
-                fragment = new m(); // SettingsFragment as camera placeholder for now
+                fragment = new r2.a(); // Camera2PreviewFragment
                 Log.d("CHMP4", "Switching to Camera tab");
                 break;
             case 1:
-                fragment = new m(); // SettingsFragment
+                fragment = new com.nvshen.chmp4.m(); // SettingsFragment
                 Log.d("CHMP4", "Switching to Settings tab");
                 break;
             case 2:
-                fragment = new m(); // SettingsFragment as webview placeholder
+                fragment = new r2.g(); // WebViewFragment
                 Log.d("CHMP4", "Switching to WebView tab");
                 break;
         }

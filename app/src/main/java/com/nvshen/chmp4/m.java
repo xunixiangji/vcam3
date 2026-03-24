@@ -611,9 +611,9 @@ public class m extends Fragment {
         Log.d(TAG, "setupDaemonButton: cmd=" + command + " param=" + param);
         try {
             String cacheDir = app.getCacheDir().getAbsolutePath();
-            // Build and execute injection command
-            String cmd = String.format("su %s/sh %s/chmp4.sh %s",
-                cacheDir, cacheDir, command);
+            // Build and execute injection command: "%s %s/sh %s/chmp4.sh %s"
+            String cmd = String.format("%s %s/sh %s/chmp4.sh %s",
+                "su", cacheDir, cacheDir, command);
             Log.d("CHMP4PREVIEWFORMAT", cmd);
             s2.b.I(cmd);
         } catch (Exception ex) {
@@ -630,17 +630,30 @@ public class m extends Fragment {
         View view = getView();
         if (view == null) return;
         try {
-            // Find status text and update
-            TextView statusText = (TextView) view.findViewById(R.id.text_status);
-            if (statusText != null) {
-                com.nvshen.chmp4.k serviceManager = com.nvshen.chmp4.k.c();
-                int status = serviceManager.d();
+            // Update camera replace status
+            TextView cameraStatus = (TextView) view.findViewById(R.id.textView_camera_replace_status);
+            // Update player status
+            TextView playerStatus = (TextView) view.findViewById(R.id.textView_player_status);
+
+            com.nvshen.chmp4.k serviceManager = com.nvshen.chmp4.k.c();
+            int status = serviceManager.d();
+
+            if (cameraStatus != null) {
                 if (status > 0) {
-                    statusText.setText("Running");
-                    statusText.setTextColor(-16711936); // green
+                    cameraStatus.setText("Running");
+                    cameraStatus.setTextColor(-16711936); // green
                 } else {
-                    statusText.setText("Stopped");
-                    statusText.setTextColor(-65536); // red
+                    cameraStatus.setText("Stopped");
+                    cameraStatus.setTextColor(-65536); // red
+                }
+            }
+            if (playerStatus != null) {
+                if (status > 0) {
+                    playerStatus.setText("Player Running");
+                    playerStatus.setTextColor(-16711936); // green
+                } else {
+                    playerStatus.setText("Player Stopped");
+                    playerStatus.setTextColor(-65536); // red
                 }
             }
         } catch (Exception ex) {
@@ -706,19 +719,36 @@ public class m extends Fragment {
         try {
             Application app = activity.getApplication();
             String cacheDir = activity.getCacheDir().getAbsolutePath();
-            // Get current daemon config
+
+            // Get current daemon config from spinners/settings
             int width = 640, height = 480;
             String videoPath = "";
             String rotate = "";
             String flip = "";
 
-            // Build initchmp4 command
-            String cmd = String.format("%ssu %s/sh %s/chmp4.sh initchmp4 %d %d %s %s %s",
-                "", cacheDir, cacheDir, width, height, videoPath, rotate, flip);
+            // Try to get values from UI spinners
+            View view = getView();
+            if (view != null) {
+                Spinner spinner = (Spinner) view.findViewById(R.id.spinner);
+                if (spinner != null && spinner.getSelectedItem() != null) {
+                    videoPath = spinner.getSelectedItem().toString();
+                }
+                Spinner rotateSpinner = (Spinner) view.findViewById(R.id.rotate);
+                if (rotateSpinner != null && rotateSpinner.getSelectedItem() != null) {
+                    rotate = rotateSpinner.getSelectedItem().toString();
+                }
+                Spinner flipSpinner = (Spinner) view.findViewById(R.id.flip);
+                if (flipSpinner != null && flipSpinner.getSelectedItem() != null) {
+                    flip = flipSpinner.getSelectedItem().toString();
+                }
+            }
+
+            // Build initchmp4 command: "%s%s/sh %s/chmp4.sh initchmp4 %d %d %s %s %s"
+            String cmd = String.format("%s%s/sh %s/chmp4.sh initchmp4 %d %d %s %s %s",
+                "su ", cacheDir, cacheDir, width, height, videoPath, rotate, flip);
             Log.d("CHMP4PREVIEWFORMAT", cmd);
 
-            // Execute via root shell
-            View view = getView();
+            // Execute via root shell with callback
             com.nvshen.chmp4.d.B().g(cmd, new com.nvshen.chmp4.l(this, view));
         } catch (Exception ex) {
             Log.e(TAG, "startDaemon failed", ex);
@@ -733,8 +763,14 @@ public class m extends Fragment {
     public void s1() {
         Log.d(TAG, "stopDaemon");
         try {
-            // Kill daemon process
-            s2.b.I("pgrep -f initchmp4 -L 9");
+            Activity activity = getActivity();
+            if (activity == null) return;
+            String cacheDir = activity.getCacheDir().getAbsolutePath();
+            // Execute resetCamera: "%s %s/sh %s/chmp4.sh resetCamera"
+            String cmd = String.format("%s %s/sh %s/chmp4.sh resetCamera",
+                "su", cacheDir, cacheDir);
+            Log.d("CHMP4PREVIEWFORMAT", "stopDaemon: " + cmd);
+            s2.b.I(cmd);
             // Refresh status
             A1();
         } catch (Exception ex) {
@@ -773,46 +809,80 @@ public class m extends Fragment {
         if (activity == null) return;
 
         try {
-            // Start/inject button
-            View startBtn = view.findViewById(R.id.button_start);
-            if (startBtn != null) {
-                startBtn.setOnClickListener(new a());
+            // "Replace camera" / settings button
+            View buttonSettings = view.findViewById(R.id.button_settings);
+            if (buttonSettings != null) {
+                buttonSettings.setOnClickListener(new a());
             }
 
-            // Refresh button
-            View refreshBtn = view.findViewById(R.id.button_refresh);
-            if (refreshBtn != null) {
-                refreshBtn.setOnClickListener(new s());
+            // "Reset camera" / close button
+            View buttonClose = view.findViewById(R.id.button_close);
+            if (buttonClose != null) {
+                buttonClose.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        s1();
+                    }
+                });
             }
 
-            // Copy device ID button
-            View copyBtn = view.findViewById(R.id.button_copy_id);
-            if (copyBtn != null) {
-                copyBtn.setOnClickListener(new o());
+            // "Activate" button
+            View buttonActivate = view.findViewById(R.id.button_activate);
+            EditText cdkeyInput = (EditText) view.findViewById(R.id.cdkey_input);
+            TextView cdkeyInfo = (TextView) view.findViewById(R.id.cdkey_info);
+            if (buttonActivate != null && cdkeyInput != null) {
+                buttonActivate.setOnClickListener(new q(cdkeyInput, cdkeyInfo));
             }
 
-            // Share button
-            View shareBtn = view.findViewById(R.id.button_share);
-            if (shareBtn != null) {
-                shareBtn.setOnClickListener(new p());
+            // "Start player" button (inject daemon)
+            View buttonStartPlayer = view.findViewById(R.id.button_start_player);
+            if (buttonStartPlayer != null) {
+                buttonStartPlayer.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        try {
+                            Application app = activity.getApplication();
+                            z1(app, "", "", null);
+                        } catch (Exception ex) {
+                            Log.e(TAG, "startPlayer failed", ex);
+                        }
+                    }
+                });
             }
 
-            // Website button
-            View websiteBtn = view.findViewById(R.id.button_website);
-            if (websiteBtn != null) {
-                websiteBtn.setOnClickListener(new r(activity));
+            // "Stop player" button
+            View buttonStopPlayer = view.findViewById(R.id.button_stop_player);
+            if (buttonStopPlayer != null) {
+                buttonStopPlayer.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        s1();
+                    }
+                });
             }
 
-            // Auto-inject toggle
-            View autoToggle = view.findViewById(R.id.switch_auto_inject);
-            if (autoToggle instanceof Switch) {
-                ((Switch) autoToggle).setOnCheckedChangeListener(new t());
+            // Float window switch
+            View switchFloat = view.findViewById(R.id.switch_float);
+            if (switchFloat instanceof Switch) {
+                ((Switch) switchFloat).setOnCheckedChangeListener(new t());
             }
 
-            // Hook enabled toggle
-            View hookToggle = view.findViewById(R.id.switch_hook_enabled);
-            if (hookToggle instanceof Switch) {
-                ((Switch) hookToggle).setOnCheckedChangeListener(new u());
+            // SU switch
+            View switchSu = view.findViewById(R.id.switch_su);
+            if (switchSu instanceof Switch) {
+                ((Switch) switchSu).setOnCheckedChangeListener(new u());
+            }
+
+            // Device ID click -> copy
+            View deviceid = view.findViewById(R.id.deviceid);
+            if (deviceid != null) {
+                deviceid.setOnClickListener(new o());
+            }
+
+            // QR code click
+            View qrcode = view.findViewById(R.id.qrcode);
+            if (qrcode != null) {
+                qrcode.setOnClickListener(new p());
             }
         } catch (Exception ex) {
             Log.e(TAG, "setupButtons failed", ex);
@@ -868,21 +938,65 @@ public class m extends Fragment {
     public void C1(View view) {
         if (view == null) return;
         try {
-            // Update expiration display
-            TextView expiryText = (TextView) view.findViewById(R.id.text_expiry);
-            if (expiryText != null) {
-                w1(expiryText);
+            // Find all views from fragment_settings layout
+            Button buttonSettings = (Button) view.findViewById(R.id.button_settings);
+            Button buttonClose = (Button) view.findViewById(R.id.button_close);
+            Button buttonActivate = (Button) view.findViewById(R.id.button_activate);
+            Button buttonStartPlayer = (Button) view.findViewById(R.id.button_start_player);
+            Button buttonStopPlayer = (Button) view.findViewById(R.id.button_stop_player);
+            Spinner spinner = (Spinner) view.findViewById(R.id.spinner);
+            Switch switchFloat = (Switch) view.findViewById(R.id.switch_float);
+            Switch switchSu = (Switch) view.findViewById(R.id.switch_su);
+            ImageView qrcode = (ImageView) view.findViewById(R.id.qrcode);
+            TextView deviceid = (TextView) view.findViewById(R.id.deviceid);
+            TextView cdkeyInfo = (TextView) view.findViewById(R.id.cdkey_info);
+            EditText cdkeyInput = (EditText) view.findViewById(R.id.cdkey_input);
+            TextView cameraReplaceStatus = (TextView) view.findViewById(R.id.textView_camera_replace_status);
+            TextView playerStatus = (TextView) view.findViewById(R.id.textView_player_status);
+
+            // Update expiration display in cdkey_info
+            if (cdkeyInfo != null) {
+                w1(cdkeyInfo);
+            }
+
+            // Update camera replace status
+            if (cameraReplaceStatus != null) {
+                // Post status update on handler
+                mHandler.post(new r2.l(this, cameraReplaceStatus));
             }
 
             // Generate and display QR code with device info
-            ImageView qrImage = (ImageView) view.findViewById(R.id.image_qr);
-            if (qrImage != null) {
-                String deviceInfo = t1(view.getContext());
-                if (!deviceInfo.isEmpty()) {
-                    Bitmap qr = x1(deviceInfo);
-                    if (qr != null) {
-                        qrImage.setImageBitmap(qr);
+            if (qrcode != null) {
+                Context ctx = (Context) getActivity();
+                if (ctx != null) {
+                    String deviceInfo = t1(ctx);
+                    if (deviceInfo != null && !deviceInfo.isEmpty()) {
+                        Bitmap qr = x1(deviceInfo);
+                        if (qr != null) {
+                            qrcode.setImageBitmap(qr);
+                        }
                     }
+                }
+            }
+
+            // Set device ID text
+            if (deviceid != null) {
+                String devId = com.nvshen.chmp4.d.B().s();
+                if (devId != null && !devId.isEmpty()) {
+                    deviceid.setText(devId);
+                }
+            }
+
+            // Populate video spinner
+            if (spinner != null) {
+                List<String> videoList = com.nvshen.chmp4.d.B().m();
+                if (videoList != null && !videoList.isEmpty()) {
+                    ArrayAdapter<String> adapter = new ArrayAdapter<String>(
+                        (Context) getActivity(),
+                        android.R.layout.simple_spinner_item,
+                        videoList);
+                    adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                    spinner.setAdapter(adapter);
                 }
             }
         } catch (Exception ex) {
