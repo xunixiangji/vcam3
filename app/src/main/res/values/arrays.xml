@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="flip">
+        <item>None</item>
+        <item>Horizontal</item>
+        <item>Vertical</item>
+        <item>Both</item>
+    </string-array>
+    <string-array name="transpose">
+        <item>0</item>
+        <item>90</item>
+        <item>180</item>
+        <item>270</item>
+    </string-array>
+    <string-array name="height_padding">
+        <item>0</item>
+        <item>10</item>
+        <item>20</item>
+        <item>50</item>
+        <item>100</item>
+    </string-array>
+</resources>

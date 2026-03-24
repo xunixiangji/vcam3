@@ -4,12 +4,13 @@
     <string name="replace_camera_success">Camera replaced successfully</string>
     <string name="replace_camera_fail">Camera replacement failed</string>
     <string name="camerar2_basic_picture">Take Photo</string>
-    <string name="copyright">VCam Reversed</string>
+    <string name="copyright">VCam Reversed Edition</string>
     <string name="preview_camera">Preview</string>
     <string name="stop_preview_camera">Stop</string>
     <string name="deviceid">Device ID</string>
     <string name="input_cdkey">Enter activation code</string>
     <string name="activate">Activate</string>
+    <string name="button_active">Activate</string>
     <string name="inject_hook">Inject Hook</string>
     <string name="stop_hook">Stop Hook</string>
     <string name="kill_camera">Kill Camera</string>
@@ -25,4 +26,22 @@
     <string name="status_checking">Checking...</string>
     <string name="no_root">No root access</string>
     <string name="root_required">Root access is required</string>
+    <string name="setting_textview_usage_head">Usage Instructions</string>
+    <string name="setting_textview_step_1">Step 1: Inject Hook</string>
+    <string name="setting_replace_fail">Injection failed</string>
+    <string name="replace_camera">Replace Camera</string>
+    <string name="reset_camera">Reset Camera</string>
+    <string name="setting_textview_step_2">Step 2: Select Video</string>
+    <string name="video_come_from">Video Source</string>
+    <string name="screen_flip">Flip</string>
+    <string name="screen_rotate">Rotate</string>
+    <string name="screen_height_padding">Height Padding</string>
+    <string name="video_size">Video Size</string>
+    <string name="setting_player_stop">Player Stopped</string>
+    <string name="start_player">Start Player</string>
+    <string name="stop_player">Stop Player</string>
+    <string name="switch_float">Float Window</string>
+    <string name="switch_su">Root Mode</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
 </resources>
