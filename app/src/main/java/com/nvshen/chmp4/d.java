@@ -11,28 +11,23 @@ import android.widget.Toast;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.net.InetSocketAddress;
-import java.net.Proxy;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
-import l3.a0;
-import l3.b0;
-import l3.c0;
-import l3.d0;
-import l3.e0;
-import l3.p;
-import l3.x;
-import l3.y;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.FormBody;
+import okhttp3.Interceptor;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
 
 /**
  * ApiManager (class d) - FULLY RESTORED FROM nmmp BYTECODE
@@ -42,11 +37,9 @@ import l3.y;
  * API endpoints:
  *   /api/login - POST login with deviceId, pkgname, username, password
  *   /api/register - POST register with deviceId, pkgname, username, password
- *   /api/activate - POST activate with deviceId, pkgname, code (activation code)
- *   /api/check - POST check activation with deviceId, pkgname
- *   /camera/device - POST device info
- *   /camera/useTimeCode - POST time code usage
- *   /camera/{type} - GET resource by type (e.g. "pic", "download")
+ *   /camera/useTimeCode - POST activate with code
+ *   /camera/device - POST check activation
+ *   /camera/{type} - GET resource by type
  */
 public class d {
 
@@ -73,171 +66,7 @@ public class d {
 
     int mUrlIndex = 0;                                             // f3501o
     HashMap<String, g> mCallbacks = new HashMap<String, g>();      // f3502p
-
-    // ===== Inner class: OkHttp Interceptor (adds auth headers) =====
-    class a implements l3.b {
-        final String mHeaderKey;    // f3503d
-        final String mHeaderValue;  // f3504e
-
-        a(String key, String value) {
-            this.mHeaderKey = key;
-            this.mHeaderValue = value;
-        }
-
-        @Override
-        public a0 a(e0 chain, c0 request) {
-            c0.a builder = request.e();
-            builder.b("User-Agent", E());
-            builder.b("deviceId", mDeviceId);
-            if (mAuthToken != null && mAuthToken.length() > 0) {
-                builder.b("token", mAuthToken);
-            }
-            if (mHeaderKey != null && mHeaderKey.length() > 0) {
-                builder.b(mHeaderKey, mHeaderValue);
-            }
-            c0 newRequest = builder.a();
-            return chain.a(newRequest);
-        }
-    }
-
-    // ===== Inner class: OkHttp Callback for activation =====
-    class b implements l3.f {
-        final e mCallback;  // f3506a - ResponseCallback
-
-        b(e callback) { this.mCallback = callback; }
-
-        @Override
-        public void a(l3.e call, c0 response) {
-            // onResponse
-            try {
-                String body = response.a().g();
-                int statusCode = response.b();
-                H(mCallback != null ? new com.nvshen.chmp4.d.f() {
-                    @Override
-                    public void a(int resultCode) {
-                        if (mCallback != null) {
-                            mCallback.a(resultCode, body);
-                        }
-                    }
-                } : null, statusCode, body);
-            } catch (Exception ex) {
-                Log.e(TAG, "onResponse error", ex);
-                if (mCallback != null) {
-                    mCallback.a(500, ex.getMessage());
-                }
-            }
-        }
-
-        @Override
-        public void b(l3.e call, IOException e) {
-            // onFailure
-            Log.e(TAG, "onFailure:" + e.getMessage());
-            if (mCallback != null) {
-                mCallback.a(-1, e.getMessage());
-            }
-        }
-    }
-
-    // ===== Inner class: OkHttp Callback for login/register =====
-    class c implements l3.f {
-        final e mCallback;  // f3508a
-
-        c(e callback) { this.mCallback = callback; }
-
-        @Override
-        public void a(l3.e call, c0 response) {
-            // onResponse
-            try {
-                String body = response.a().g();
-                int statusCode = response.b();
-                L(mCallback, statusCode, body);
-            } catch (Exception ex) {
-                Log.e(TAG, "onResponse error", ex);
-                if (mCallback != null) {
-                    mCallback.a(500, ex.getMessage());
-                }
-            }
-        }
-
-        @Override
-        public void b(l3.e call, IOException e) {
-            // onFailure
-            Log.e(TAG, "onFailure:" + e.getMessage());
-            if (mCallback != null) {
-                mCallback.a(-1, e.getMessage());
-            }
-        }
-    }
-
-    // ===== Inner class: OkHttp Callback for file download =====
-    class C0037d implements l3.f {
-        final h mDownloadCallback;  // f3510a
-        final String mUrl;          // f3511b
-        final String mSavePath;     // f3512c
-
-        C0037d(h callback, String url, String savePath) {
-            this.mDownloadCallback = callback;
-            this.mUrl = url;
-            this.mSavePath = savePath;
-        }
-
-        @Override
-        public void a(l3.e call, c0 response) {
-            // onResponse - download file with progress
-            try {
-                int statusCode = response.b();
-                if (statusCode != 200) {
-                    if (mDownloadCallback != null) {
-                        mDownloadCallback.a(statusCode, 0, "fail," + statusCode);
-                    }
-                    return;
-                }
-                a0 responseBody = response.a();
-                if (responseBody == null) {
-                    if (mDownloadCallback != null) {
-                        mDownloadCallback.a(-1, 0, "empty body");
-                    }
-                    return;
-                }
-                long contentLength = responseBody.b();
-                InputStream inputStream = responseBody.c();
-                FileOutputStream fos = new FileOutputStream(mSavePath);
-                byte[] buffer = new byte[8192];
-                long totalRead = 0;
-                int bytesRead;
-                while ((bytesRead = inputStream.read(buffer)) != -1) {
-                    fos.write(buffer, 0, bytesRead);
-                    totalRead += bytesRead;
-                    if (contentLength > 0) {
-                        int progress = (int) ((totalRead * 100) / contentLength);
-                        if (mDownloadCallback != null) {
-                            mDownloadCallback.a(200, progress, "");
-                        }
-                    }
-                }
-                fos.flush();
-                fos.close();
-                inputStream.close();
-                if (mDownloadCallback != null) {
-                    mDownloadCallback.a(200, 100, mSavePath);
-                }
-            } catch (Exception ex) {
-                Log.e(TAG, "download error", ex);
-                if (mDownloadCallback != null) {
-                    mDownloadCallback.a(-1, 0, ex.getMessage());
-                }
-            }
-        }
-
-        @Override
-        public void b(l3.e call, IOException e) {
-            // onFailure
-            Log.e(TAG, "download onFailure:" + e.getMessage());
-            if (mDownloadCallback != null) {
-                mDownloadCallback.a(-1, 0, e.getMessage());
-            }
-        }
-    }
+    private OkHttpClient mClient = null;
 
     // ===== Callback Interfaces =====
 
@@ -313,7 +142,6 @@ public class d {
     public void K(s2.b.e shellResult) {
         a0();  // clearStatus()
         int exitCode = shellResult.a();  // getExitCode()
-        List<String> stdoutList = new ArrayList<String>();
         String stdoutStr = shellResult.c();
         if (stdoutStr != null && stdoutStr.length() > 0) {
             String[] lines = stdoutStr.split("\n");
@@ -390,10 +218,25 @@ public class d {
     // ===== Public API Methods =====
 
     /** getOkHttpClient() -> returns configured OkHttp client with interceptor */
-    public y A() {
-        y.a builder = new y.a();
-        builder.a(new a("deviceId", mDeviceId));
-        return builder.a();
+    public OkHttpClient A() {
+        if (mClient == null) {
+            mClient = new OkHttpClient.Builder()
+                .addInterceptor(new Interceptor() {
+                    @Override
+                    public Response intercept(Chain chain) throws IOException {
+                        Request original = chain.request();
+                        Request.Builder builder = original.newBuilder()
+                            .header("User-Agent", E())
+                            .header("deviceId", mDeviceId);
+                        if (mAuthToken != null && mAuthToken.length() > 0) {
+                            builder.header("token", mAuthToken);
+                        }
+                        return chain.proceed(builder.build());
+                    }
+                })
+                .build();
+        }
+        return mClient;
     }
 
     /** getProxyUrl() -> proxy URL string */
@@ -403,7 +246,7 @@ public class d {
 
     /** getRemainingDays() */
     public int D() {
-        if (mContext == null) return -1;
+        if (mContext == null) return mRemainingDays;
         SharedPreferences prefs = mContext.getSharedPreferences("CHMP4", Context.MODE_PRIVATE);
         return prefs.getInt("remainingDays", mRemainingDays);
     }
@@ -435,22 +278,35 @@ public class d {
     }
 
     /** login(username, password, callback) */
-    public void O(String username, String password, e callback) {
+    public void O(String username, String password, final e callback) {
         Z();  // build base params
         mParams.put("username", username);
         mParams.put("password", password);
 
-        d0.a formBuilder = new d0.a();
+        FormBody.Builder formBuilder = new FormBody.Builder();
         for (String key : mParams.keySet()) {
-            formBuilder.a(key, mParams.get(key));
+            formBuilder.add(key, mParams.get(key));
         }
 
-        c0.a requestBuilder = new c0.a();
-        requestBuilder.a(o() + "/api/login");
-        requestBuilder.a(formBuilder.a());
-        c0 request = requestBuilder.a();
+        Request request = new Request.Builder()
+            .url(o() + "/api/login")
+            .post(formBuilder.build())
+            .build();
 
-        A().a(request).a(new c(callback));
+        A().newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e2) {
+                Log.e(TAG, "onFailure:" + e2.getMessage());
+                if (callback != null) callback.a(-1, e2.getMessage());
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                String body = response.body() != null ? response.body().string() : "";
+                int statusCode = response.code();
+                L(callback, statusCode, body);
+            }
+        });
     }
 
     /** setVideoPath(path) - sends video path to daemon via binder */
@@ -470,31 +326,24 @@ public class d {
             String videoPath = videoList.get(index);
             Log.e(TAG, "mp4filepath " + videoPath);
 
-            // Build filter string based on flip/rotate settings
-            int flip = 0; // from SharedPreferences
-            int rotate = 0; // from SharedPreferences
+            // Build filter string
             String filterStr = "";
+            if (mContext != null) {
+                SharedPreferences prefs = mContext.getSharedPreferences("CHMP4", Context.MODE_PRIVATE);
+                int flip = Integer.parseInt(prefs.getString("flip", "0"));
+                int rotate = Integer.parseInt(prefs.getString("rotate", "0"));
 
-            if (rotate == 1) {
-                filterStr = filterStr + ",transpose=2";
-            }
-            if (rotate == 2) {
-                filterStr = filterStr + ",transpose=1";
-            }
-            if (flip == 1) {
-                filterStr = filterStr + ",hflip";
-            }
-            if (flip == 2) {
-                filterStr = filterStr + ",vflip";
+                if (rotate == 1) filterStr = filterStr + ",transpose=2";
+                if (rotate == 2) filterStr = filterStr + ",transpose=1";
+                if (flip == 1) filterStr = filterStr + ",hflip";
+                if (flip == 2) filterStr = filterStr + ",vflip";
             }
 
-            // Send video path to daemon via ServiceManager
             k serviceManager = k.c();
             if (serviceManager != null) {
                 serviceManager.g(videoPath);
             }
 
-            // Save index in preferences
             if (mContext != null) {
                 SharedPreferences.Editor editor = mContext.getSharedPreferences("CHMP4", Context.MODE_PRIVATE).edit();
                 editor.putInt("index", index);
@@ -507,7 +356,6 @@ public class d {
     public void S(Context context) {
         this.mContext = context.getApplicationContext();
 
-        // Load saved state from SharedPreferences
         SharedPreferences prefs = mContext.getSharedPreferences("CHMP4", Context.MODE_PRIVATE);
         this.mToken = prefs.getString("token", "");
         this.mAuthToken = prefs.getString("authToken", "");
@@ -583,7 +431,7 @@ public class d {
         mParams.put("pkgname", p());
     }
 
-    /** clearStatus() - resets operational state */
+    /** clearStatus() - resets operational state, dismisses progress dialog */
     public void a0() {
         if (mProgressDialog != null && mProgressDialog.isShowing()) {
             try {
@@ -596,60 +444,70 @@ public class d {
     }
 
     /** checkActivation(callback) - checks activation status with server */
-    public void b0(e callback) {
+    public void b0(final e callback) {
         Z();  // build base params
 
-        d0.a formBuilder = new d0.a();
+        FormBody.Builder formBuilder = new FormBody.Builder();
         for (String key : mParams.keySet()) {
-            formBuilder.a(key, mParams.get(key));
+            formBuilder.add(key, mParams.get(key));
         }
 
-        c0.a requestBuilder = new c0.a();
-        requestBuilder.a(o() + "/camera/device");
-        requestBuilder.a(formBuilder.a());
-        c0 request = requestBuilder.a();
+        Request request = new Request.Builder()
+            .url(o() + "/camera/device")
+            .post(formBuilder.build())
+            .build();
 
-        A().a(request).a(new b(callback));
-    }
-
-    /** activate(code, callback) - activates license with activation code */
-    public void f(String code, f callback) {
-        Z();  // build base params
-        mParams.put("code", code);
-
-        String url = o() + "/camera/useTimeCode";
-        StringBuffer sb = new StringBuffer();
-        sb.append(url);
-        sb.append("&code=");
-        sb.append(code);
-
-        d0.a formBuilder = new d0.a();
-        for (String key : mParams.keySet()) {
-            formBuilder.a(key, mParams.get(key));
-        }
-
-        c0.a requestBuilder = new c0.a();
-        requestBuilder.a(url);
-        requestBuilder.a(formBuilder.a());
-        c0 request = requestBuilder.a();
-
-        A().a(request).a(new l3.f() {
+        A().newCall(request).enqueue(new Callback() {
             @Override
-            public void a(l3.e call, c0 response) {
-                try {
-                    String body = response.a().g();
-                    int statusCode = response.b();
-                    H(callback, statusCode, body);
-                } catch (Exception ex) {
-                    Log.e(TAG, "activate error", ex);
-                    if (callback != null) callback.a(500);
-                }
+            public void onFailure(Call call, IOException e2) {
+                Log.e(TAG, "onFailure:" + e2.getMessage());
+                if (callback != null) callback.a(-1, e2.getMessage());
             }
 
             @Override
-            public void b(l3.e call, IOException e) {
-                Log.e(TAG, "activate onFailure:" + e.getMessage());
+            public void onResponse(Call call, Response response) throws IOException {
+                String body = response.body() != null ? response.body().string() : "";
+                int statusCode = response.code();
+                // Parse as activation response
+                H(new f() {
+                    @Override
+                    public void a(int resultCode) {
+                        if (callback != null) callback.a(resultCode, body);
+                    }
+                }, statusCode, body);
+            }
+        });
+    }
+
+    /** activate(code, callback) - activates license with activation code */
+    public void f(String code, final f callback) {
+        Z();  // build base params
+        mParams.put("code", code);
+
+        FormBody.Builder formBuilder = new FormBody.Builder();
+        for (String key : mParams.keySet()) {
+            formBuilder.add(key, mParams.get(key));
+        }
+
+        String url = o() + "/camera/useTimeCode";
+
+        Request request = new Request.Builder()
+            .url(url)
+            .post(formBuilder.build())
+            .build();
+
+        A().newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e2) {
+                Log.e(TAG, "activate onFailure:" + e2.getMessage());
                 if (callback != null) callback.a(-1);
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                String body = response.body() != null ? response.body().string() : "";
+                int statusCode = response.code();
+                H(callback, statusCode, body);
             }
         });
     }
@@ -658,7 +516,7 @@ public class d {
      * runDaemonCommand(command, callback) - executes shell command for daemon
      * Uses s2.b.I (root shell) to execute, then calls K() on result
      */
-    public void g(String command, g callback) {
+    public void g(String command, final g callback) {
         if (callback != null) {
             mCallbacks.put(command, callback);
         }
@@ -695,7 +553,7 @@ public class d {
         return mProgressDialog;
     }
 
-    /** getVideoCount(path) - counts video files in path */
+    /** getVideoCount(path) - counts video files */
     public int j(String path) {
         List<String> list = m();
         if (list != null) {
@@ -705,12 +563,48 @@ public class d {
     }
 
     /** downloadFile(url, path, callback) - OkHttp download with progress */
-    public void k(String url, String path, h callback) {
-        c0.a requestBuilder = new c0.a();
-        requestBuilder.a(url);
-        c0 request = requestBuilder.a();
+    public void k(String url, String path, final h callback) {
+        Request request = new Request.Builder().url(url).build();
 
-        A().a(request).a(new C0037d(callback, url, path));
+        A().newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e2) {
+                Log.e(TAG, "download onFailure:" + e2.getMessage());
+                if (callback != null) callback.a(-1, 0, e2.getMessage());
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                int statusCode = response.code();
+                if (statusCode != 200) {
+                    if (callback != null) callback.a(statusCode, 0, "fail," + statusCode);
+                    return;
+                }
+                ResponseBody responseBody = response.body();
+                if (responseBody == null) {
+                    if (callback != null) callback.a(-1, 0, "empty body");
+                    return;
+                }
+                long contentLength = responseBody.contentLength();
+                InputStream inputStream = responseBody.byteStream();
+                FileOutputStream fos = new FileOutputStream(path);
+                byte[] buffer = new byte[8192];
+                long totalRead = 0;
+                int bytesRead;
+                while ((bytesRead = inputStream.read(buffer)) != -1) {
+                    fos.write(buffer, 0, bytesRead);
+                    totalRead += bytesRead;
+                    if (contentLength > 0) {
+                        int progress = (int) ((totalRead * 100) / contentLength);
+                        if (callback != null) callback.a(200, progress, "");
+                    }
+                }
+                fos.flush();
+                fos.close();
+                inputStream.close();
+                if (callback != null) callback.a(200, 100, path);
+            }
+        });
     }
 
     /** getFileSize(path) -> returns file size in bytes */
@@ -767,22 +661,35 @@ public class d {
     }
 
     /** register(username, password, callback) */
-    public void n(String username, String password, e callback) {
+    public void n(String username, String password, final e callback) {
         Z();  // build base params
         mParams.put("username", username);
         mParams.put("password", password);
 
-        d0.a formBuilder = new d0.a();
+        FormBody.Builder formBuilder = new FormBody.Builder();
         for (String key : mParams.keySet()) {
-            formBuilder.a(key, mParams.get(key));
+            formBuilder.add(key, mParams.get(key));
         }
 
-        c0.a requestBuilder = new c0.a();
-        requestBuilder.a(o() + "/api/register");
-        requestBuilder.a(formBuilder.a());
-        c0 request = requestBuilder.a();
+        Request request = new Request.Builder()
+            .url(o() + "/api/register")
+            .post(formBuilder.build())
+            .build();
 
-        A().a(request).a(new c(callback));
+        A().newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e2) {
+                Log.e(TAG, "onFailure:" + e2.getMessage());
+                if (callback != null) callback.a(-1, e2.getMessage());
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                String body = response.body() != null ? response.body().string() : "";
+                int statusCode = response.code();
+                L(callback, statusCode, body);
+            }
+        });
     }
 
     /** getBaseUrl() -> current base URL */
