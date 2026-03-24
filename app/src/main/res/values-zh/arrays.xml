@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string-array name="flip">
-        <item>default</item>
-        <item>↕ horizontal</item>
-        <item>↔ vertical</item>
+        <item>默认</item>
+        <item>↕ 水平</item>
+        <item>↔ 垂直</item>
     </string-array>
     <string-array name="height_padding">
         <item>0</item>
@@ -29,8 +29,8 @@
         <item>reply_all</item>
     </string-array>
     <string-array name="transpose">
-        <item>default</item>
-        <item>🔄 Rotate 90 degrees counterclockwise</item>
-        <item>🔄 Rotate 90 degrees clockwise</item>
+        <item>默认</item>
+        <item>🔄逆时针旋转90度</item>
+        <item>🔄顺时针旋转90度</item>
     </string-array>
 </resources>

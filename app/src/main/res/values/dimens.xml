@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="action_bar_size">16.0dip</dimen>
+    <dimen name="badge_corner_radius">13.0dip</dimen>
+    <dimen name="badge_height_padding">1.0dip</dimen>
+    <dimen name="badge_text_size">12.0sp</dimen>
+    <dimen name="badge_top_margin">2.0dip</dimen>
+    <dimen name="badge_width_padding">4.0dip</dimen>
+    <dimen name="bottom_navigation_elevation">8.0dip</dimen>
+    <dimen name="bottom_navigation_height">56.0dip</dimen>
+    <dimen name="bottom_navigation_padded_height">64.0dip</dimen>
+    <dimen name="bottom_navigation_top_margin_correction">-8.0dip</dimen>
+    <dimen name="default_dimension">100.0dip</dimen>
+    <item type="dimen" name="disabled_alpha_material_dark">0.3</item>
+    <item type="dimen" name="disabled_alpha_material_light">0.26</item>
+    <dimen name="fastscroll_default_thickness">8.0dip</dimen>
+    <dimen name="fastscroll_margin">0.0dip</dimen>
+    <dimen name="fastscroll_minimum_range">50.0dip</dimen>
+    <dimen name="fixed_height">56.0dip</dimen>
+    <dimen name="fixed_height_bottom_padding">10.0dip</dimen>
+    <dimen name="fixed_height_top_padding_active">0.0dip</dimen>
+    <dimen name="fixed_height_top_padding_inactive">2.0dip</dimen>
+    <dimen name="fixed_icon_badge_grid_height">36.0dip</dimen>
+    <dimen name="fixed_icon_badge_grid_width">48.0dip</dimen>
+    <dimen name="fixed_icon_grid">24.0dip</dimen>
+    <dimen name="fixed_label_active">14.0sp</dimen>
+    <item type="dimen" name="fixed_label_active_to_inactive_ratio">0.857</item>
+    <dimen name="fixed_label_inactive">12.0sp</dimen>
+    <dimen name="fixed_max_width">168.0dip</dimen>
+    <dimen name="fixed_min_width">120.0dip</dimen>
+    <dimen name="fixed_min_width_small_views">104.0dip</dimen>
+    <dimen name="fixed_no_title_icon_container_height">42.0dip</dimen>
+    <dimen name="fixed_no_title_icon_container_width">56.0dip</dimen>
+    <dimen name="fixed_no_title_icon_height">32.0dip</dimen>
+    <dimen name="fixed_no_title_icon_width">32.0dip</dimen>
+    <dimen name="fixed_width_padding">12.0dip</dimen>
+    <item type="dimen" name="highlight_alpha_material_colored">0.26</item>
+    <item type="dimen" name="highlight_alpha_material_dark">0.2</item>
+    <item type="dimen" name="highlight_alpha_material_light">0.12</item>
+    <item type="dimen" name="hint_alpha_material_dark">0.5</item>
+    <item type="dimen" name="hint_alpha_material_light">0.38</item>
+    <item type="dimen" name="hint_pressed_alpha_material_dark">0.7</item>
+    <item type="dimen" name="hint_pressed_alpha_material_light">0.54</item>
+    <dimen name="item_touch_helper_max_drag_scroll_per_frame">20.0dip</dimen>
+    <dimen name="item_touch_helper_swipe_escape_max_velocity">800.0dip</dimen>
+    <dimen name="item_touch_helper_swipe_escape_velocity">120.0dip</dimen>
+    <item type="dimen" name="material_emphasis_disabled">0.38</item>
+    <item type="dimen" name="material_emphasis_high_type">0.87</item>
+    <item type="dimen" name="material_emphasis_medium">0.6</item>
+    <dimen name="material_text_view_test_line_height">200.0px</dimen>
+    <dimen name="material_text_view_test_line_height_override">100.0px</dimen>
+    <dimen name="shifting_height">56.0dip</dimen>
+    <dimen name="shifting_height_bottom_padding_active">10.0dip</dimen>
+    <dimen name="shifting_height_bottom_padding_inactive">16.0dip</dimen>
+    <dimen name="shifting_height_top_padding_active">0.0dip</dimen>
+    <dimen name="shifting_height_top_padding_inactive">10.0dip</dimen>
+    <dimen name="shifting_icon_badge_grid_height">36.0dip</dimen>
+    <dimen name="shifting_icon_badge_grid_width">48.0dip</dimen>
+    <dimen name="shifting_icon_grid">24.0dip</dimen>
+    <dimen name="shifting_label">14.0sp</dimen>
+    <dimen name="shifting_max_width_active">168.0dip</dimen>
+    <dimen name="shifting_max_width_inactive">96.0dip</dimen>
+    <dimen name="shifting_min_width_active">96.0dip</dimen>
+    <dimen name="shifting_min_width_inactive">64.0dip</dimen>
+    <dimen name="shifting_no_title_icon_container_height">42.0dip</dimen>
+    <dimen name="shifting_no_title_icon_container_width">56.0dip</dimen>
+    <dimen name="shifting_no_title_icon_height">32.0dip</dimen>
+    <dimen name="shifting_no_title_icon_width">32.0dip</dimen>
+    <dimen name="shifting_width_custom_padding">6.0dip</dimen>
+</resources>

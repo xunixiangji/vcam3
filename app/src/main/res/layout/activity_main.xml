@@ -3,31 +3,12 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:id="@+id/activity_main"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent">
-
-    <TextView
-        android:id="@+id/tv_mod_banner"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="VCam Reversed - nmmp removed, pure Java, arm64"
-        android:textColor="#FF4CAF50"
-        android:textSize="12sp"
-        android:gravity="center"
-        android:padding="4dp"
-        android:background="#1A4CAF50" />
-
-    <FrameLayout
-        android:id="@+id/fragment_container"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1" />
-
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent">
+    <FrameLayout android:id="@+id/fragment_container" android:layout_width="fill_parent" android:layout_height="fill_parent" android:layout_weight="1.0" />
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottom_navigation_bar"
-        android:layout_width="match_parent"
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:background="@android:color/white"
         app:menu="@menu/bottom_nav_menu" />
-
 </LinearLayout>
