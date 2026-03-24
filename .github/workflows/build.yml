@@ -21,36 +21,33 @@ jobs:
       - name: Install apktool
         run: |
           mkdir -p ~/bin
-          wget -q https://raw.githubusercontent.com/iBotPeaches/Apktool/master/scripts/linux/apktool -O ~/bin/apktool
-          wget -q https://bitbucket.org/iBotPeaches/apktool/downloads/apktool_2.10.0.jar -O ~/bin/apktool.jar
+          # Download apktool wrapper script
+          cat > ~/bin/apktool << 'WRAPPER'
+          #!/bin/bash
+          java -jar ~/bin/apktool.jar "$@"
+          WRAPPER
           chmod +x ~/bin/apktool
+          # Download apktool jar (use GitHub releases instead of bitbucket)
+          wget -q https://github.com/iBotPeaches/Apktool/releases/download/v2.9.3/apktool_2.9.3.jar -O ~/bin/apktool.jar
           export PATH=~/bin:$PATH
           apktool --version
 
       - name: Build APK
         run: |
           export PATH=~/bin:$PATH
-          cd demo_source
-          apktool b . -o ../vcam-modified.apk --use-aapt2
+          apktool b demo_source -o vcam-modified.apk --use-aapt2
 
       - name: Sign APK
         run: |
-          # Generate debug keystore
           keytool -genkey -v -keystore debug.keystore \
             -alias androiddebugkey -keyalg RSA -keysize 2048 \
             -validity 10000 -storepass android -keypass android \
             -dname "CN=Debug,O=Debug,C=US"
 
-          # Sign
           jarsigner -keystore debug.keystore -storepass android \
             -signedjar vcam-signed.apk vcam-modified.apk androiddebugkey
 
-          # Zipalign (optional, improves performance)
-          if command -v zipalign &> /dev/null; then
-            zipalign -v 4 vcam-signed.apk vcam-final.apk
-          else
-            cp vcam-signed.apk vcam-final.apk
-          fi
+          cp vcam-signed.apk vcam-final.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
