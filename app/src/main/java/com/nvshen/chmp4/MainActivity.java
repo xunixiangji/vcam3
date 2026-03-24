@@ -181,16 +181,19 @@ public class MainActivity extends AppCompatActivity {
         Fragment fragment = null;
         switch (tabIndex) {
             case 0:
+                // 说明 - Preview/instructions fragment
+                fragment = new r2.a(); // Camera preview as instructions
+                Log.d("CHMP4", "Switching to Info tab");
+                break;
+            case 1:
+                // 相机API1 - Camera
                 fragment = new r2.a(); // Camera2PreviewFragment
                 Log.d("CHMP4", "Switching to Camera tab");
                 break;
-            case 1:
+            case 2:
+                // 设置 - Settings (main functionality)
                 fragment = new com.nvshen.chmp4.m(); // SettingsFragment
                 Log.d("CHMP4", "Switching to Settings tab");
-                break;
-            case 2:
-                fragment = new r2.g(); // WebViewFragment
-                Log.d("CHMP4", "Switching to WebView tab");
                 break;
         }
         if (fragment != null) {
@@ -360,11 +363,11 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public boolean onNavigationItemSelected(@NonNull MenuItem item) {
                     int id = item.getItemId();
-                    if (id == R.id.nav_camera) {
+                    if (id == R.id.nav_info) {
                         O(0);
-                    } else if (id == R.id.nav_settings) {
+                    } else if (id == R.id.nav_camera) {
                         O(1);
-                    } else if (id == R.id.nav_help) {
+                    } else if (id == R.id.nav_settings) {
                         O(2);
                     }
                     return true;
@@ -372,8 +375,9 @@ public class MainActivity extends AppCompatActivity {
             });
         }
 
-        // Switch to default tab (Settings = 1, most useful for testing)
-        O(1);
+        // Switch to default tab (设置 = 2)
+        O(2);
+        if (bottomNav != null) bottomNav.setSelectedItemId(R.id.nav_settings);
 
         // Start update check
         R();

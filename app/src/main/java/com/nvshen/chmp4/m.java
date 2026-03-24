@@ -736,28 +736,40 @@ public class m extends Fragment {
      * Calls ApiManager.m() to get video list, populates spinner
      */
     public void B1() {
-        View view = getView();
+        final View view = getView();
         if (view == null) return;
+        final Activity activity = getActivity();
+        if (activity == null) return;
 
-        Spinner spinner = (Spinner) view.findViewById(R.id.spinner);
-        if (spinner == null) return;
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                final List<String> videoList = com.nvshen.chmp4.d.B().m();
+                activity.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            Spinner spinner = (Spinner) view.findViewById(R.id.spinner);
+                            if (spinner == null) return;
 
-        List<String> videoList = com.nvshen.chmp4.d.B().m();
-        if (videoList == null) {
-            videoList = new ArrayList<String>();
-        }
+                            List<String> list = videoList != null ? videoList : new ArrayList<String>();
+                            ArrayAdapter<String> adapter = new ArrayAdapter<String>(
+                                activity, android.R.layout.simple_spinner_item, list);
+                            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                            spinner.setAdapter(adapter);
 
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(
-            getActivity(), android.R.layout.simple_spinner_item, videoList);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinner.setAdapter(adapter);
-
-        // Restore saved index
-        SharedPreferences prefs = getActivity().getSharedPreferences("CHMP4", Context.MODE_PRIVATE);
-        int savedIndex = prefs.getInt("index", 0);
-        if (savedIndex >= 0 && savedIndex < videoList.size()) {
-            spinner.setSelection(savedIndex);
-        }
+                            SharedPreferences prefs = activity.getSharedPreferences("CHMP4", Context.MODE_PRIVATE);
+                            int savedIndex = prefs.getInt("index", 0);
+                            if (savedIndex >= 0 && savedIndex < list.size()) {
+                                spinner.setSelection(savedIndex);
+                            }
+                        } catch (Exception e) {
+                            Log.e(TAG, "B1 update UI failed", e);
+                        }
+                    }
+                });
+            }
+        }).start();
     }
 
     /**
@@ -903,15 +915,25 @@ public class m extends Fragment {
      * Executes resetCamera command via shell
      */
     public void s1() {
-        Context ctx = getActivity();
+        final Context ctx = getActivity();
         if (ctx == null) return;
 
-        String cacheDir = ctx.getCacheDir().getAbsolutePath();
-        String suPath = "su";
-        String cmd = String.format("%s %s/sh %s/chmp4.sh resetCamera", suPath, cacheDir, cacheDir);
-        Log.d(TAG, "s1: " + cmd);
-        s2.b.I(cmd);
-        A1(); // refresh status
+        final String cacheDir = ctx.getCacheDir().getAbsolutePath();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                String suPath = "su";
+                String cmd = String.format("%s %s/sh %s/chmp4.sh resetCamera", suPath, cacheDir, cacheDir);
+                Log.d(TAG, "s1: " + cmd);
+                s2.b.I(cmd);
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() { A1(); }
+                    });
+                }
+            }
+        }).start();
     }
 
     /**
