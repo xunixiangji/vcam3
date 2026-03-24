@@ -1,13 +1,12 @@
 package com.nvshen.chmp4;
 
 import android.app.Application;
-import android.os.Build;
-import android.provider.Settings;
-
 import com.nmmedit.protect.NativeUtil;
 
 /**
- * MyApplication - RESTORED FROM nmmp BYTECODE
+ * MyApplication - matches original demo exactly
+ * Only initializes ApiManager with context, NO shell commands here.
+ * Shell commands happen later in SplashActivity after files are copied.
  */
 public class MyApplication extends Application {
 
@@ -16,11 +15,9 @@ public class MyApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        // Initialize ApiManager
+        // Only initialize ApiManager with context and load SharedPreferences
+        // Do NOT execute any shell commands here - cache files don't exist yet
         d.B().S(this);
-        // Set device ID
-        String deviceId = Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID);
-        d.B().W(deviceId);
     }
 
     public void a(String deviceId) {

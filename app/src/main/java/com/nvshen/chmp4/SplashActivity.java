@@ -107,6 +107,9 @@ public class SplashActivity extends AppCompatActivity {
             // Copy native binaries
             os12copyfile();
 
+            // Now that shell files exist, load deviceId from shell
+            d.B().loadDeviceIdFromShell();
+
             // Launch MainActivity
             runOnUiThread(new Runnable() {
                 @Override

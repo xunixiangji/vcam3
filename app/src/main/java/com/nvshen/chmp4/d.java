@@ -352,10 +352,11 @@ public class d {
         }
     }
 
-    /** init(context) - initializes with application context */
+    /** init(context) - initializes with application context, loads saved state */
     public void S(Context context) {
         this.mContext = context.getApplicationContext();
 
+        // Load saved state from SharedPreferences - NO shell commands here
         SharedPreferences prefs = mContext.getSharedPreferences("CHMP4", Context.MODE_PRIVATE);
         this.mToken = prefs.getString("token", "");
         this.mAuthToken = prefs.getString("authToken", "");
@@ -364,20 +365,42 @@ public class d {
         this.mNs = prefs.getInt("ns", 0);
         this.mCurrentTime = prefs.getInt("currentTime", 0);
         this.mUrlIndex = prefs.getInt("URLINDEX", 0);
+        this.mDeviceId = prefs.getString("deviceId", "");
 
-        // Load deviceId via shell
-        String cacheDir = mContext.getCacheDir().getAbsolutePath();
-        s2.b.e result = s2.b.I(String.format("%s/sh %s/chmp4.sh getDeviceId", cacheDir, cacheDir));
-        if (result != null && result.a() == 0) {
-            String deviceId = result.c();
-            if (deviceId != null && deviceId.trim().length() > 0) {
-                this.mDeviceId = deviceId.trim();
+        // Use android_id as fallback deviceId (no shell needed)
+        if (this.mDeviceId == null || this.mDeviceId.length() == 0) {
+            try {
+                this.mDeviceId = android.provider.Settings.Secure.getString(
+                    mContext.getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
+            } catch (Exception e) {
+                this.mDeviceId = "unknown";
             }
         }
+    }
 
-        if (this.mDeviceId == null || this.mDeviceId.length() == 0) {
-            this.mDeviceId = Build.SERIAL;
-        }
+    /** loadDeviceIdFromShell() - called AFTER SplashActivity copies shell files */
+    public void loadDeviceIdFromShell() {
+        if (mContext == null) return;
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    String cacheDir = mContext.getCacheDir().getAbsolutePath();
+                    s2.b.e result = s2.b.I(String.format("%s/sh %s/chmp4.sh getDeviceId", cacheDir, cacheDir));
+                    if (result != null && result.a() == 0) {
+                        String deviceId = result.c();
+                        if (deviceId != null && deviceId.trim().length() > 0) {
+                            mDeviceId = deviceId.trim();
+                            // Save to prefs
+                            mContext.getSharedPreferences("CHMP4", Context.MODE_PRIVATE)
+                                .edit().putString("deviceId", mDeviceId).apply();
+                        }
+                    }
+                } catch (Exception e) {
+                    Log.e(TAG, "loadDeviceIdFromShell failed", e);
+                }
+            }
+        }).start();
     }
 
     /** setExtraParam(param) */
