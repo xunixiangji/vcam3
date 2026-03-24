@@ -980,8 +980,8 @@ public class m extends Fragment {
             return;
         }
 
-        // Use nohup to detach script from su process - prevents SIGKILL when cameraserver restarts
-        String command = String.format("nohup %s/sh %s/chmp4.sh initchmp4 %d %d %s '%s' %s > /data/local/tmp/h.log 2>&1 &",
+        // libsu persistent shell - no need for nohup, shell survives cameraserver restart
+        String command = String.format("%s/sh %s/chmp4.sh initchmp4 %d %d %s '%s' %s",
             cacheDir, cacheDir, remain, now, token, mp4file, filterStr);
 
         Log.d(TAG, "r1: " + command);
