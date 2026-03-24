@@ -254,6 +254,11 @@ public class SplashActivity extends AppCompatActivity {
         String suffix = isos64bit() ? "-1364" : "-1032";
         String cacheDir = ctx.getCacheDir().getAbsolutePath();
 
+        // Delete old files first (may have wrong ownership from previous install)
+        s2.b.I("rm -f " + cacheDir + "/CHMP4 " + cacheDir + "/libCHMP4.so " +
+               cacheDir + "/libhookProxy.so " + cacheDir + "/libshadowhook.so " +
+               cacheDir + "/sh " + cacheDir + "/chmp4.sh");
+
         // Copy 4 native binaries (with suffix in asset name, without suffix in output)
         String[] names = {"CHMP4", "libCHMP4", "libhookProxy", "libshadowhook"};
         for (int i = 0; i < 4; i++) {

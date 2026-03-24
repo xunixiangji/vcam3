@@ -246,6 +246,11 @@ public class m extends Fragment {
                         {"chmp4.sh", "chmp4.sh"},
                         {"sh", "sh"},
                     };
+                    // Delete old files first (may be root-owned from previous copy)
+                    for (String[] entry : fileMap) {
+                        s2.b.I("rm -f " + cacheDir + "/" + entry[1]);
+                    }
+
                     for (String[] entry : fileMap) {
                         try {
                             java.io.InputStream is = ctx.getAssets().open(entry[0]);
