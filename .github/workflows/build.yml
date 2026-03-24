@@ -25,37 +25,45 @@ jobs:
         uses: gradle/actions/setup-gradle@v3
 
       - name: Generate Gradle Wrapper
-        run: |
-          gradle wrapper --gradle-version 8.2
+        run: gradle wrapper --gradle-version 8.2
 
-      - name: Build APK
+      - name: Show project structure
+        run: |
+          echo "=== Java files ==="
+          find . -name "*.java" | sort
+          echo ""
+          echo "=== Resource files ==="
+          find app/src/main/res -name "*.xml" | head -20
+          echo ""
+          echo "=== build.gradle ==="
+          cat app/build.gradle
+
+      - name: Build with full output
         run: |
           chmod +x gradlew
-          echo "=== Compiling ==="
-          ./gradlew assembleDebug --stacktrace 2>&1 || true
+          ./gradlew assembleDebug 2>&1 | tee build_output.txt
           echo ""
-          echo "=== Build output ==="
-          find . -name "*.apk" -type f 2>/dev/null
-          find . -path "*/build/outputs/*" -type f 2>/dev/null
+          echo "=== ERRORS ==="
+          grep -i "error" build_output.txt | head -40
           echo ""
-          echo "=== Checking for compile errors ==="
-          find . -name "*.java" -path "*/com/nvshen/*" | head -20
-          echo ""
-          echo "=== Java compile errors if any ==="
-          ./gradlew compileDebugJavaSources 2>&1 | grep -i "error\|cannot\|symbol\|package" | head -30 || true
+          echo "=== APK FILES ==="
+          find . -name "*.apk" -type f
 
-      - name: Copy APK
+      - name: Upload build log
         if: always()
-        run: |
-          mkdir -p output
-          find . -name "*.apk" -type f -exec cp {} output/ \; 2>/dev/null
-          ls -la output/ 2>/dev/null || echo "No APK found"
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: build_output.txt
+          if-no-files-found: warn
 
       - name: Upload APK
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: vcam-pure-java-apk
-          path: output/
+          path: |
+            app/build/outputs/apk/**/*.apk
+            app/build/outputs/apk/debug/*.apk
           if-no-files-found: warn
           retention-days: 30
