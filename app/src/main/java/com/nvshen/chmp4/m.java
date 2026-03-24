@@ -880,8 +880,37 @@ public class m extends Fragment {
     public View d0(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_settings, container, false);
         if (view != null) {
+            // Request permissions first (storage, camera)
+            Activity activity = getActivity();
+            if (activity != null) {
+                y1(activity);
+            }
+
             C1(view);
             u1(view);
+
+            // Check activation status from server (restores auth after reinstall)
+            final TextView cdkeyInfo = (TextView) view.findViewById(R.id.cdkey_info);
+            com.nvshen.chmp4.d.B().b0(new com.nvshen.chmp4.d.e() {
+                @Override
+                public void a(int statusCode, String body) {
+                    if (statusCode == 200 && cdkeyInfo != null) {
+                        Activity act = getActivity();
+                        if (act != null) {
+                            act.runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    int remain = com.nvshen.chmp4.d.B().D();
+                                    if (remain > 0) {
+                                        cdkeyInfo.setText("已激活，剩余 " + remain + " 天");
+                                        cdkeyInfo.setTextColor(0xFF00AA00);
+                                    }
+                                }
+                            });
+                        }
+                    }
+                }
+            });
         }
         return view;
     }
