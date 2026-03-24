@@ -181,9 +181,9 @@ public class MainActivity extends AppCompatActivity {
         Fragment fragment = null;
         switch (tabIndex) {
             case 0:
-                // 说明 - Preview/instructions fragment
-                fragment = new r2.d(); // PreviewFragment with copyright + preview buttons
-                Log.d("CHMP4", "Switching to Info tab");
+                // 说明 - WebView loading server help page
+                fragment = new r2.g(); // WebViewFragment: oopo.top/html/chmp4.html
+                Log.d("CHMP4", "Switching to WebView/Info tab");
                 break;
             case 1:
                 // 相机API1 - Camera
