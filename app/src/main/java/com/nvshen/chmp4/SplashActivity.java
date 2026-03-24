@@ -174,27 +174,34 @@ public class SplashActivity extends AppCompatActivity {
             public void run() {
                 try {
                     AlertDialog.Builder builder = new AlertDialog.Builder((Context) SplashActivity.this);
-                    builder.setTitle("Root Not Detected");
-                    builder.setMessage("Root access not available. Hook injection will not work, but you can still browse the app.\n\nFor full functionality, please grant root access.");
-                    builder.setPositiveButton("Continue Anyway", new DialogInterface.OnClickListener() {
+                    builder.setTitle("\u65e0\u6cd5\u83b7\u5f97root\u6743\u9650"); // 无法获得root权限
+                    final EditText input = new EditText((Context) SplashActivity.this);
+                    input.setHint("\u8bf7\u8f93\u5165su\u8def\u5f84"); // 请输入su路径
+                    builder.setView(input);
+                    builder.setPositiveButton("\u2714", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            dialog.dismiss();
-                            // Launch MainActivity even without root
-                            Intent intent = new Intent((Context) SplashActivity.this, MainActivity.class);
-                            startActivity(intent);
-                            finish();
+                            String suPath = input.getText().toString().trim();
+                            if (!suPath.isEmpty()) {
+                                // Try with custom su path
+                                try {
+                                    SplashActivity.this.J(s2.b.I(suPath));
+                                } catch (Throwable t) {
+                                    Log.e("CHMP4", "Custom su path failed", t);
+                                    dialog.dismiss();
+                                    SplashActivity.this.finish();
+                                }
+                            } else {
+                                dialog.dismiss();
+                                SplashActivity.this.finish();
+                            }
                         }
                     });
-                    builder.setNegativeButton("Exit", new a());
+                    builder.setNegativeButton("\u2718", new a());
                     builder.setCancelable(false);
                     builder.show();
-                } catch (Exception e) {
-                    Log.e("CHMP4", "Error showing no-root dialog", e);
-                    // Fallback: just launch MainActivity
-                    Intent intent = new Intent((Context) SplashActivity.this, MainActivity.class);
-                    startActivity(intent);
-                    finish();
+                } catch (Exception e2) {
+                    Log.e("CHMP4", "Error showing no-root dialog", e2);
                 }
             }
         });
