@@ -2,7 +2,7 @@ name: Build VCam APK (Pure Java, arm64)
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, pure-java ]
   workflow_dispatch:
 
 jobs:
