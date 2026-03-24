@@ -183,7 +183,7 @@ public class d {
                 }
                 return;
             }
-            if (json.getInt("code") == 200) {
+            if (json.optInt("code") == 200) {
                 this.mCurrentTime = json.optInt("now");
                 this.mAuthToken = json.optString("token");
                 this.mNs = json.optInt("ns", 0);
