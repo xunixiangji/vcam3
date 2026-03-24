@@ -903,15 +903,6 @@
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
     </style>
-    <style name="TestStyleWithLineHeightAppearance">
-        <item name="android:textAppearance">@style/TestStyleWithLineHeight</item>
-    </style>
-    <style name="TestStyleWithoutLineHeight" parent="@style/TextAppearance.AppCompat.Title">
-        <item name="android:textSize">20.0sp</item>
-    </style>
-    <style name="TestThemeWithLineHeightDisabled" parent="@style/TestThemeWithLineHeight">
-        <item name="textAppearanceLineHeightEnabled">false</item>
-    </style>
     <style name="TextAppearance.AppCompat" parent="@style/Base.TextAppearance.AppCompat" />
     <style name="TextAppearance.AppCompat.Body1" parent="@style/Base.TextAppearance.AppCompat.Body1" />
     <style name="TextAppearance.AppCompat.Body2" parent="@style/Base.TextAppearance.AppCompat.Body2" />
