@@ -182,7 +182,7 @@ public class MainActivity extends AppCompatActivity {
         switch (tabIndex) {
             case 0:
                 // 说明 - Preview/instructions fragment
-                fragment = new r2.a(); // Camera preview as instructions
+                fragment = new r2.d(); // PreviewFragment with copyright + preview buttons
                 Log.d("CHMP4", "Switching to Info tab");
                 break;
             case 1:

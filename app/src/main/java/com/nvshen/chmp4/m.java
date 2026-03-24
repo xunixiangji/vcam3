@@ -128,19 +128,30 @@ public class m extends Fragment {
         public void a(n2.e<?> observer, Button button) {
             Log.d(TAG, "BINDER");
             try {
-                Context ctx = getActivity();
+                final Context ctx = getActivity();
                 if (ctx == null) return;
-                String cacheDir = ctx.getCacheDir().getAbsolutePath();
+                final String cacheDir = ctx.getCacheDir().getAbsolutePath();
                 String suPath = "su";
                 SharedPreferences prefs = ctx.getSharedPreferences("CHMP4", Context.MODE_PRIVATE);
                 if (prefs.getInt("su_type", 0) == 1) {
                     suPath = "/sbin/su";
                 }
-                String cmd = String.format("%s %s/sh %s/chmp4.sh resetCamera",
+                final String cmd = String.format("%s %s/sh %s/chmp4.sh resetCamera",
                     suPath, cacheDir, cacheDir);
                 Log.d("CHMP4PREVIEWFORMAT", cmd);
-                s2.b.I(cmd);
-                A1(); // refresh status
+                // Run on background thread to avoid ANR
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        s2.b.I(cmd);
+                        if (getActivity() != null) {
+                            getActivity().runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() { A1(); }
+                            });
+                        }
+                    }
+                }).start();
             } catch (Exception ex) {
                 Log.e(TAG, "resetCamera failed", ex);
             }

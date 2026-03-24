@@ -625,31 +625,29 @@ public class d {
     public List<String> m() {
         List<String> videoList = new ArrayList<String>();
         try {
-            // Find mp4 files in Movies directory
-            s2.b.e result1 = s2.b.i("find /sdcard/Movies/ -iname \"*.mp4\"");
-            if (result1 != null && result1.a() == 0) {
-                String output = result1.c();
-                if (output != null && output.length() > 0) {
-                    String[] files = output.split("\n");
-                    for (String file : files) {
-                        String trimmed = file.trim();
-                        if (trimmed.length() > 0) {
-                            videoList.add(trimmed);
-                        }
-                    }
-                }
-            }
-
-            // Find mp4 files in DCIM directory
-            s2.b.e result2 = s2.b.i("find /sdcard/DCIM/ -iname \"*.mp4\"");
-            if (result2 != null && result2.a() == 0) {
-                String output = result2.c();
-                if (output != null && output.length() > 0) {
-                    String[] files = output.split("\n");
-                    for (String file : files) {
-                        String trimmed = file.trim();
-                        if (trimmed.length() > 0) {
-                            videoList.add(trimmed);
+            // Use root shell (s2.b.I) instead of non-root (s2.b.i) for Android 14 compatibility.
+            // Search both /sdcard/ and /storage/emulated/0/ paths to handle symlink differences.
+            String[] searchPaths = {
+                "/sdcard/Movies/", "/sdcard/DCIM/", "/sdcard/Download/",
+                "/storage/emulated/0/Movies/", "/storage/emulated/0/DCIM/", "/storage/emulated/0/Download/"
+            };
+            java.util.HashSet<String> seen = new java.util.HashSet<String>();
+            for (String searchPath : searchPaths) {
+                s2.b.e result = s2.b.I("find " + searchPath + " -iname \"*.mp4\" 2>/dev/null");
+                if (result != null && result.a() == 0) {
+                    String output = result.c();
+                    if (output != null && output.length() > 0) {
+                        String[] files = output.split("\n");
+                        for (String file : files) {
+                            String trimmed = file.trim();
+                            if (trimmed.length() > 0) {
+                                // Normalize path to avoid duplicates from symlinks
+                                String normalized = trimmed.replace("/sdcard/", "/storage/emulated/0/");
+                                if (!seen.contains(normalized)) {
+                                    seen.add(normalized);
+                                    videoList.add(trimmed);
+                                }
+                            }
                         }
                     }
                 }

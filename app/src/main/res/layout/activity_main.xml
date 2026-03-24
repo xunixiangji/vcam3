@@ -10,5 +10,8 @@
         android:id="@+id/bottom_navigation_bar"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
+        android:background="@android:color/white"
+        app:itemIconTint="@color/bottom_nav_item_color"
+        app:itemTextColor="@color/bottom_nav_item_color"
         app:menu="@menu/bottom_nav_menu" />
 </LinearLayout>
