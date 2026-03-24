@@ -22,6 +22,6 @@ public class b {
     }
     public static void N(a config) {}
     public static e I(String cmd) { return new e(); }
-    public e i() { return this instanceof e ? (e) this : new e(); }
+    public static e i(String cmd) { return new e(); }
     public static d c(String cmd) { return new d(); }
 }
