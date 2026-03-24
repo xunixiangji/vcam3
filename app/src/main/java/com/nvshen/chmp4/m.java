@@ -980,9 +980,8 @@ public class m extends Fragment {
             return;
         }
 
-        // Build the command without su prefix - s2.b.I() already wraps in su shell
-        // Quote mp4file path in case it has spaces
-        String command = String.format("%s/sh %s/chmp4.sh initchmp4 %d %d %s '%s' %s",
+        // Use nohup to detach script from su process - prevents SIGKILL when cameraserver restarts
+        String command = String.format("nohup %s/sh %s/chmp4.sh initchmp4 %d %d %s '%s' %s > /data/local/tmp/h.log 2>&1 &",
             cacheDir, cacheDir, remain, now, token, mp4file, filterStr);
 
         Log.d(TAG, "r1: " + command);
