@@ -440,10 +440,15 @@ public class d {
     }
 
     /** showToast(message) */
-    public void Y(String message) {
-        if (mContext != null) {
-            Toast.makeText(mContext, message, Toast.LENGTH_SHORT).show();
-        }
+    public void Y(final String message) {
+        if (mContext == null) return;
+        android.os.Handler mainHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(mContext, message, Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     /** buildRequestParams() - builds request with device info */

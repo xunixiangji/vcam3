@@ -247,23 +247,38 @@ public class SplashActivity extends AppCompatActivity {
         }
     }
 
-    /** Copy daemon + hook binaries from assets (Android 12+) */
+    /** Copy ALL daemon + hook binaries + shell scripts from assets */
     public void os12copyfile() throws Throwable {
         Context ctx = getApplicationContext();
         String dir = isos64bit() ? "bin64" : "bin";
-        String suffix = isos64bit() ? "1364" : "1032";
+        String suffix = isos64bit() ? "-1364" : "-1032";
+        String cacheDir = ctx.getCacheDir().getAbsolutePath();
 
+        // Copy 4 native binaries (with suffix in asset name, without suffix in output)
         String[] names = {"CHMP4", "libCHMP4", "libhookProxy", "libshadowhook"};
         for (int i = 0; i < 4; i++) {
             String assetPath, outputName;
             if (i > 0) {
-                assetPath = String.format("%s/%s-%s.so", dir, names[i], suffix);
+                assetPath = String.format("%s/%s%s.so", dir, names[i], suffix);
                 outputName = names[i] + ".so";
             } else {
-                assetPath = String.format("%s/%s-%s", dir, names[i], suffix);
+                assetPath = String.format("%s/%s%s", dir, names[i], suffix);
                 outputName = names[i];
             }
             releaseAssetToCacheDir(ctx, assetPath, outputName);
         }
+
+        // Copy sh binary
+        releaseAssetToCacheDir(ctx, "sh", "sh");
+
+        // Copy chmp4.sh script
+        releaseAssetToCacheDir(ctx, "chmp4.sh", "chmp4.sh");
+
+        // Make all files executable via root
+        s2.b.I("chmod +x " + cacheDir + "/sh");
+        s2.b.I("chmod +x " + cacheDir + "/CHMP4");
+        s2.b.I("chmod +x " + cacheDir + "/chmp4.sh");
+
+        Log.d("CHMP4", "os12copyfile done, files in " + cacheDir);
     }
 }

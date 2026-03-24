@@ -233,13 +233,23 @@ public class m extends Fragment {
                     Context ctx = mActivity;
                     String cacheDir = ctx.getCacheDir().getAbsolutePath();
                     // Copy native binaries from assets to cache dir
-                    String[] files = {"CHMP4", "libCHMP4.so", "libhookProxy.so", "libshadowhook.so", "chmp4.sh"};
+                    // Asset filenames have suffix: CHMP4-1364 (64bit) or CHMP4-1032 (32bit)
                     String abi = Build.CPU_ABI;
-                    String binDir = abi.contains("64") ? "bin64" : "bin";
-                    for (String file : files) {
+                    boolean is64 = abi.contains("64");
+                    String binDir = is64 ? "bin64" : "bin";
+                    String suffix = is64 ? "-1364" : "-1032";
+                    String[][] fileMap = {
+                        {binDir + "/CHMP4" + suffix, "CHMP4"},
+                        {binDir + "/libCHMP4" + suffix + ".so", "libCHMP4.so"},
+                        {binDir + "/libhookProxy" + suffix + ".so", "libhookProxy.so"},
+                        {binDir + "/libshadowhook" + suffix + ".so", "libshadowhook.so"},
+                        {"chmp4.sh", "chmp4.sh"},
+                        {"sh", "sh"},
+                    };
+                    for (String[] entry : fileMap) {
                         try {
-                            java.io.InputStream is = ctx.getAssets().open(binDir + "/" + file);
-                            java.io.FileOutputStream fos = new java.io.FileOutputStream(cacheDir + "/" + file);
+                            java.io.InputStream is = ctx.getAssets().open(entry[0]);
+                            java.io.FileOutputStream fos = new java.io.FileOutputStream(cacheDir + "/" + entry[1]);
                             byte[] buffer = new byte[8192];
                             int len;
                             while ((len = is.read(buffer)) != -1) {
@@ -247,13 +257,13 @@ public class m extends Fragment {
                             }
                             fos.close();
                             is.close();
+                            Log.d(TAG, "copied " + entry[0] + " -> " + entry[1]);
                         } catch (Exception ex) {
-                            Log.e(TAG, "copyDown err " + file, ex);
+                            Log.e(TAG, "copyDown err " + entry[0], ex);
                         }
                     }
-                    // Make shell scripts executable
-                    s2.b.I(String.format("chmod +x %s/sh", cacheDir));
-                    s2.b.I(String.format("chmod 777 %s/sh", cacheDir));
+                    // Make executable
+                    s2.b.I("chmod +x " + cacheDir + "/sh");
                     s2.b.I("chmod +x " + cacheDir + "/CHMP4");
                     s2.b.I("chmod +x " + cacheDir + "/chmp4.sh");
                 } catch (Exception ex) {
