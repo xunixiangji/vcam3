@@ -981,7 +981,8 @@ public class m extends Fragment {
         }
 
         // Build the command without su prefix - s2.b.I() already wraps in su shell
-        String command = String.format("%s/sh %s/chmp4.sh initchmp4 %d %d %s %s %s",
+        // Quote mp4file path in case it has spaces
+        String command = String.format("%s/sh %s/chmp4.sh initchmp4 %d %d %s '%s' %s",
             cacheDir, cacheDir, remain, now, token, mp4file, filterStr);
 
         Log.d(TAG, "r1: " + command);
