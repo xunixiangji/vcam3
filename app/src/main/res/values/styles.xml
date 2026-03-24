@@ -49,13 +49,6 @@
         <item name="android:windowEnterAnimation">@anim/abc_tooltip_enter</item>
         <item name="android:windowExitAnimation">@anim/abc_tooltip_exit</item>
     </style>
-    <style name="Base.CardView" parent="@android:style/Widget">
-        <item name="cardCornerRadius">@dimen/cardview_default_radius</item>
-        <item name="cardElevation">@dimen/cardview_default_elevation</item>
-        <item name="cardMaxElevation">@dimen/cardview_default_elevation</item>
-        <item name="cardPreventCornerOverlap">true</item>
-        <item name="cardUseCompatPadding">false</item>
-    </style>
     <style name="Base.DialogWindowTitle.AppCompat" parent="@android:style/Widget">
         <item name="android:textAppearance">@style/TextAppearance.AppCompat.Title</item>
         <item name="android:maxLines">1</item>
@@ -775,30 +768,6 @@
         <item name="android:breakStrategy">high_quality</item>
         <item name="android:hyphenationFrequency">none</item>
     </style>
-    <style name="Base.Widget.AppCompat.TextView.SpinnerItem" parent="@android:style/Widget.Material.TextView.SpinnerItem" />
-    <style name="Base.Widget.AppCompat.Toolbar" parent="@style/Base.V7.Widget.AppCompat.Toolbar" />
-    <style name="Base.Widget.AppCompat.Toolbar.Button.Navigation" parent="@android:style/Widget.Material.Toolbar.Button.Navigation" />
-    <style name="Base.Widget.Design.TabLayout" parent="@android:style/Widget">
-        <item name="android:background">@null</item>
-        <item name="tabIconTint">@null</item>
-        <item name="tabIndicator">@drawable/mtrl_tabs_default_indicator</item>
-        <item name="tabIndicatorAnimationDuration">@integer/design_tab_indicator_anim_duration_ms</item>
-        <item name="tabIndicatorColor">?colorAccent</item>
-        <item name="tabIndicatorGravity">bottom</item>
-        <item name="tabMaxWidth">@dimen/design_tab_max_width</item>
-        <item name="tabPaddingEnd">12.0dip</item>
-        <item name="tabPaddingStart">12.0dip</item>
-        <item name="tabRippleColor">?colorControlHighlight</item>
-        <item name="tabTextAppearance">@style/TextAppearance.Design.Tab</item>
-        <item name="tabTextColor">@null</item>
-        <item name="tabUnboundedRipple">false</item>
-    </style>
-    <style name="CardView.Dark" parent="@style/CardView">
-        <item name="cardBackgroundColor">@color/cardview_dark_background</item>
-    </style>
-    <style name="CardView.Light" parent="@style/CardView">
-        <item name="cardBackgroundColor">@color/cardview_light_background</item>
-    </style>
     <style name="EmptyTheme" />
     <style name="MaterialAlertDialog.MaterialComponents" parent="@style/AlertDialog.AppCompat">
         <item name="android:layout">@layout/mtrl_alert_dialog</item>
@@ -934,20 +903,11 @@
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
     </style>
-    <style name="TestStyleWithLineHeight" parent="@style/TestStyleWithoutLineHeight">
-        <item name="lineHeight">@dimen/material_text_view_test_line_height</item>
-    </style>
     <style name="TestStyleWithLineHeightAppearance">
         <item name="android:textAppearance">@style/TestStyleWithLineHeight</item>
     </style>
-    <style name="TestStyleWithThemeLineHeightAttribute" parent="@style/TestStyleWithoutLineHeight">
-        <item name="lineHeight">?themeLineHeight</item>
-    </style>
     <style name="TestStyleWithoutLineHeight" parent="@style/TextAppearance.AppCompat.Title">
         <item name="android:textSize">20.0sp</item>
-    </style>
-    <style name="TestThemeWithLineHeight" parent="@style/Theme.AppCompat.Light">
-        <item name="themeLineHeight">@dimen/material_text_view_test_line_height</item>
     </style>
     <style name="TestThemeWithLineHeightDisabled" parent="@style/TestThemeWithLineHeight">
         <item name="textAppearanceLineHeightEnabled">false</item>
@@ -984,56 +944,6 @@
         <item name="android:textSize">14.0sp</item>
         <item name="android:fontFamily">sans-serif</item>
     </style>
-    <style name="TextAppearance.AppCompat.Widget.ActionBar.Menu" parent="@style/Base.TextAppearance.AppCompat.Widget.ActionBar.Menu" />
-    <style name="TextAppearance.AppCompat.Widget.ActionBar.Subtitle" parent="@style/Base.TextAppearance.AppCompat.Widget.ActionBar.Subtitle" />
-    <style name="TextAppearance.AppCompat.Widget.ActionBar.Subtitle.Inverse" parent="@style/Base.TextAppearance.AppCompat.Widget.ActionBar.Subtitle.Inverse" />
-    <style name="TextAppearance.AppCompat.Widget.ActionBar.Title" parent="@style/Base.TextAppearance.AppCompat.Widget.ActionBar.Title" />
-    <style name="TextAppearance.AppCompat.Widget.ActionBar.Title.Inverse" parent="@style/Base.TextAppearance.AppCompat.Widget.ActionBar.Title.Inverse" />
-    <style name="TextAppearance.AppCompat.Widget.ActionMode.Subtitle" parent="@style/Base.TextAppearance.AppCompat.Widget.ActionMode.Subtitle" />
-    <style name="TextAppearance.AppCompat.Widget.ActionMode.Subtitle.Inverse" parent="@style/TextAppearance.AppCompat.Widget.ActionMode.Subtitle" />
-    <style name="TextAppearance.AppCompat.Widget.ActionMode.Title" parent="@style/Base.TextAppearance.AppCompat.Widget.ActionMode.Title" />
-    <style name="TextAppearance.AppCompat.Widget.ActionMode.Title.Inverse" parent="@style/TextAppearance.AppCompat.Widget.ActionMode.Title" />
-    <style name="TextAppearance.AppCompat.Widget.Button" parent="@style/Base.TextAppearance.AppCompat.Widget.Button" />
-    <style name="TextAppearance.AppCompat.Widget.Button.Borderless.Colored" parent="@style/Base.TextAppearance.AppCompat.Widget.Button.Borderless.Colored" />
-    <style name="TextAppearance.AppCompat.Widget.Button.Colored" parent="@style/Base.TextAppearance.AppCompat.Widget.Button.Colored" />
-    <style name="TextAppearance.AppCompat.Widget.Button.Inverse" parent="@style/Base.TextAppearance.AppCompat.Widget.Button.Inverse" />
-    <style name="TextAppearance.AppCompat.Widget.DropDownItem" parent="@style/Base.TextAppearance.AppCompat.Widget.DropDownItem" />
-    <style name="TextAppearance.AppCompat.Widget.PopupMenu.Header" parent="@style/Base.TextAppearance.AppCompat.Widget.PopupMenu.Header" />
-    <style name="TextAppearance.AppCompat.Widget.PopupMenu.Large" parent="@style/Base.TextAppearance.AppCompat.Widget.PopupMenu.Large" />
-    <style name="TextAppearance.AppCompat.Widget.PopupMenu.Small" parent="@style/Base.TextAppearance.AppCompat.Widget.PopupMenu.Small" />
-    <style name="TextAppearance.AppCompat.Widget.Switch" parent="@style/Base.TextAppearance.AppCompat.Widget.Switch" />
-    <style name="TextAppearance.AppCompat.Widget.TextView.SpinnerItem" parent="@style/Base.TextAppearance.AppCompat.Widget.TextView.SpinnerItem" />
-    <style name="TextAppearance.Compat.Notification" parent="@android:style/TextAppearance.Material.Notification" />
-    <style name="TextAppearance.Compat.Notification.Info" parent="@android:style/TextAppearance.Material.Notification.Info" />
-    <style name="TextAppearance.Compat.Notification.Line2" parent="@style/TextAppearance.Compat.Notification.Info" />
-    <style name="TextAppearance.Compat.Notification.Time" parent="@android:style/TextAppearance.Material.Notification.Time" />
-    <style name="TextAppearance.Compat.Notification.Title" parent="@android:style/TextAppearance.Material.Notification.Title" />
-    <style name="TextAppearance.Design.CollapsingToolbar.Expanded" parent="@style/TextAppearance.AppCompat.Display1">
-        <item name="android:textColor">?android:textColorPrimary</item>
-    </style>
-    <style name="TextAppearance.Design.Counter" parent="@style/TextAppearance.AppCompat.Caption" />
-    <style name="TextAppearance.Design.Counter.Overflow" parent="@style/TextAppearance.AppCompat.Caption">
-        <item name="android:textColor">@color/design_error</item>
-    </style>
-    <style name="TextAppearance.Design.Error" parent="@style/TextAppearance.AppCompat.Caption">
-        <item name="android:textColor">@color/design_error</item>
-    </style>
-    <style name="TextAppearance.Design.HelperText" parent="@style/TextAppearance.AppCompat.Caption" />
-    <style name="TextAppearance.Design.Hint" parent="@style/TextAppearance.AppCompat.Caption">
-        <item name="android:textColor">?colorControlActivated</item>
-    </style>
-    <style name="TextAppearance.Design.Placeholder" parent="@style/TextAppearance.AppCompat.Body1" />
-    <style name="TextAppearance.Design.Prefix" parent="@style/TextAppearance.AppCompat.Body1" />
-    <style name="TextAppearance.Design.Snackbar.Message" parent="@android:style/TextAppearance">
-        <item name="android:textSize">@dimen/design_snackbar_text_size</item>
-        <item name="android:textColor">?android:textColorPrimary</item>
-    </style>
-    <style name="TextAppearance.Design.Suffix" parent="@style/TextAppearance.AppCompat.Body1" />
-    <style name="TextAppearance.Design.Tab" parent="@style/TextAppearance.AppCompat.Button">
-        <item name="android:textSize">@dimen/design_tab_text_size</item>
-        <item name="android:textColor">@color/mtrl_tabs_legacy_text_color_selector</item>
-        <item name="textAllCaps">true</item>
-    </style>
     <style name="TextAppearance.Widget.AppCompat.ExpandedMenu.Item" parent="@style/Base.TextAppearance.Widget.AppCompat.ExpandedMenu.Item" />
     <style name="TextAppearance.Widget.AppCompat.Toolbar.Subtitle" parent="@style/Base.TextAppearance.Widget.AppCompat.Toolbar.Subtitle" />
     <style name="TextAppearance.Widget.AppCompat.Toolbar.Title" parent="@style/Base.TextAppearance.Widget.AppCompat.Toolbar.Title" />
@@ -1063,18 +973,6 @@
     <style name="Theme.AppCompat.NoActionBar" parent="@style/Theme.AppCompat">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
-    </style>
-    <style name="Theme.Design" parent="@style/Theme.AppCompat" />
-    <style name="Theme.Design.BottomSheetDialog" parent="@style/Theme.AppCompat.Dialog">
-        <item name="android:windowBackground">@android:color/transparent</item>
-        <item name="android:windowAnimationStyle">@style/Animation.Design.BottomSheetDialog</item>
-        <item name="bottomSheetStyle">@style/Widget.Design.BottomSheet.Modal</item>
-    </style>
-    <style name="Theme.Design.Light" parent="@style/Theme.AppCompat.Light" />
-    <style name="Theme.Design.Light.BottomSheetDialog" parent="@style/Theme.AppCompat.Light.Dialog">
-        <item name="android:windowBackground">@android:color/transparent</item>
-        <item name="android:windowAnimationStyle">@style/Animation.Design.BottomSheetDialog</item>
-        <item name="bottomSheetStyle">@style/Widget.Design.BottomSheet.Modal</item>
     </style>
     <style name="Theme.Design.Light.NoActionBar" parent="@style/Theme.Design.Light">
         <item name="windowActionBar">false</item>
@@ -1191,112 +1089,6 @@
         <item name="android:textAppearance">?android:textAppearanceButton</item>
         <item name="android:textSize">@dimen/notification_action_text_size</item>
         <item name="android:textColor">@color/secondary_text_default_material_light</item>
-    </style>
-    <style name="Widget.Design.AppBarLayout" parent="@android:style/Widget">
-        <item name="android:background">?colorPrimary</item>
-        <item name="android:stateListAnimator">@animator/design_appbar_state_list_animator</item>
-        <item name="android:touchscreenBlocksFocus">true</item>
-    </style>
-    <style name="Widget.Design.BottomNavigationView" parent="">
-        <item name="elevation">@dimen/design_bottom_navigation_elevation</item>
-        <item name="enforceMaterialTheme">false</item>
-        <item name="enforceTextAppearance">false</item>
-        <item name="itemBackground">?selectableItemBackgroundBorderless</item>
-        <item name="itemHorizontalTranslationEnabled">true</item>
-        <item name="itemIconSize">@dimen/design_bottom_navigation_icon_size</item>
-        <item name="labelVisibilityMode">auto</item>
-    </style>
-    <style name="Widget.Design.BottomSheet.Modal" parent="@android:style/Widget">
-        <item name="android:background">?android:colorBackground</item>
-        <item name="android:elevation">@dimen/design_bottom_sheet_modal_elevation</item>
-        <item name="backgroundTint">?android:colorBackground</item>
-        <item name="behavior_hideable">true</item>
-        <item name="behavior_peekHeight">auto</item>
-        <item name="behavior_skipCollapsed">false</item>
-        <item name="enforceMaterialTheme">false</item>
-        <item name="shapeAppearance">@null</item>
-        <item name="shapeAppearanceOverlay">@null</item>
-    </style>
-    <style name="Widget.Design.CollapsingToolbar" parent="@android:style/Widget">
-        <item name="expandedTitleMargin">32.0dip</item>
-        <item name="statusBarScrim">?colorPrimaryDark</item>
-    </style>
-    <style name="Widget.Design.FloatingActionButton" parent="@android:style/Widget">
-        <item name="android:background">@drawable/design_fab_background</item>
-        <item name="android:focusable">true</item>
-        <item name="android:clickable">true</item>
-        <item name="backgroundTint">?colorAccent</item>
-        <item name="borderWidth">@dimen/design_fab_border_width</item>
-        <item name="elevation">@dimen/design_fab_elevation</item>
-        <item name="fabSize">auto</item>
-        <item name="hideMotionSpec">@animator/design_fab_hide_motion_spec</item>
-        <item name="hoveredFocusedTranslationZ">@dimen/design_fab_translation_z_hovered_focused</item>
-        <item name="maxImageSize">@dimen/design_fab_image_size</item>
-        <item name="pressedTranslationZ">@dimen/design_fab_translation_z_pressed</item>
-        <item name="rippleColor">?colorControlHighlight</item>
-        <item name="showMotionSpec">@animator/design_fab_show_motion_spec</item>
-    </style>
-    <style name="Widget.Design.NavigationView" parent="@style/Widget.Design.ScrimInsetsFrameLayout">
-        <item name="android:background">?android:windowBackground</item>
-        <item name="android:fitsSystemWindows">true</item>
-        <item name="android:maxWidth">@dimen/design_navigation_max_width</item>
-        <item name="elevation">@dimen/design_navigation_elevation</item>
-        <item name="itemHorizontalPadding">@dimen/design_navigation_item_horizontal_padding</item>
-        <item name="itemIconPadding">@dimen/design_navigation_item_icon_padding</item>
-    </style>
-    <style name="Widget.Design.ScrimInsetsFrameLayout" parent="">
-        <item name="insetForeground">#44000000</item>
-    </style>
-    <style name="Widget.Design.Snackbar" parent="@android:style/Widget">
-        <item name="android:background">@drawable/design_snackbar_background</item>
-        <item name="android:paddingLeft">@dimen/design_snackbar_padding_horizontal</item>
-        <item name="android:paddingRight">@dimen/design_snackbar_padding_horizontal</item>
-        <item name="android:maxWidth">@dimen/design_snackbar_max_width</item>
-        <item name="android:minWidth">@dimen/design_snackbar_min_width</item>
-        <item name="actionTextColorAlpha">@dimen/design_snackbar_action_text_color_alpha</item>
-        <item name="animationMode">slide</item>
-        <item name="elevation">@dimen/design_snackbar_elevation</item>
-        <item name="maxActionInlineWidth">@dimen/design_snackbar_action_inline_max_width</item>
-    </style>
-    <style name="Widget.Design.TabLayout" parent="@style/Base.Widget.Design.TabLayout">
-        <item name="tabGravity">fill</item>
-        <item name="tabIndicatorFullWidth">true</item>
-        <item name="tabMode">fixed</item>
-    </style>
-    <style name="Widget.Design.TextInputEditText" parent="@style/Widget.AppCompat.EditText">
-        <item name="enforceMaterialTheme">false</item>
-        <item name="enforceTextAppearance">false</item>
-    </style>
-    <style name="Widget.Design.TextInputLayout" parent="@android:style/Widget">
-        <item name="boxBackgroundMode">none</item>
-        <item name="boxStrokeColor">@color/design_box_stroke_color</item>
-        <item name="counterOverflowTextAppearance">@style/TextAppearance.Design.Counter.Overflow</item>
-        <item name="counterOverflowTextColor">@null</item>
-        <item name="counterTextAppearance">@style/TextAppearance.Design.Counter</item>
-        <item name="counterTextColor">@null</item>
-        <item name="endIconTint">@color/design_icon_tint</item>
-        <item name="enforceMaterialTheme">false</item>
-        <item name="enforceTextAppearance">false</item>
-        <item name="errorIconDrawable">@null</item>
-        <item name="errorTextAppearance">@style/TextAppearance.Design.Error</item>
-        <item name="errorTextColor">@null</item>
-        <item name="helperTextTextAppearance">@style/TextAppearance.Design.HelperText</item>
-        <item name="helperTextTextColor">@null</item>
-        <item name="hintTextAppearance">@style/TextAppearance.Design.Hint</item>
-        <item name="hintTextColor">@null</item>
-        <item name="materialThemeOverlay">@style/ThemeOverlay.Design.TextInputEditText</item>
-        <item name="passwordToggleContentDescription">@string/password_toggle_content_description</item>
-        <item name="passwordToggleDrawable">@drawable/design_password_eye</item>
-        <item name="passwordToggleTint">@color/design_icon_tint</item>
-        <item name="placeholderTextAppearance">@style/TextAppearance.Design.Placeholder</item>
-        <item name="placeholderTextColor">@null</item>
-        <item name="prefixTextAppearance">@style/TextAppearance.Design.Prefix</item>
-        <item name="prefixTextColor">@null</item>
-        <item name="shapeAppearance">@null</item>
-        <item name="shapeAppearanceOverlay">@null</item>
-        <item name="startIconTint">@color/design_icon_tint</item>
-        <item name="suffixTextAppearance">@style/TextAppearance.Design.Suffix</item>
-        <item name="suffixTextColor">@null</item>
     </style>
     <style name="Widget.Support.CoordinatorLayout" parent="@android:style/Widget">
         <item name="statusBarBackground">#ff000000</item>
