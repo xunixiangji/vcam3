@@ -7,7 +7,7 @@ import java.util.function.BiConsumer;
  * CallbackC - BiConsumer Singleton
  * Used by ApiManager for HashMap.forEach() to build query string parameters.
  */
-public final class c implements BiConsumer {
+public final class c implements BiConsumer<java.lang.Object, java.lang.Object> {
 
     public static final c INSTANCE;
 
@@ -23,7 +23,7 @@ public final class c implements BiConsumer {
      * Appends "key=value " to a shared StringBuffer.
      */
     @Override
-    public final void accept(Object key, Object value) {
+    public final void accept(java.lang.Object key, java.lang.Object value) {
         // Build query string: "key=value "
         if (key != null && value != null) {
             d.B().mParams.put(key.toString(), value.toString());

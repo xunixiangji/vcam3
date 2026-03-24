@@ -45,4 +45,7 @@
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
     <string name="setting_textview_step_3">Step 3: Advanced Settings</string>
+    <string name="check_selinux">SELinux check failed. Please ensure SELinux is permissive.</string>
+    <string name="setting_inactivated">Not activated</string>
+    <string name="setting_expired_time">Expires: %s</string>
 </resources>

@@ -39,11 +39,11 @@ public class d {
     private int mNs = 0;
     private int mMaxRetries = 32;
     private String mExtraParam = "";
-    private HashMap<String, String> mHeaders = new HashMap<>();
-    private HashMap<String, String> mParams = new HashMap<>();
+    private HashMap<String, String> mHeaders = new HashMap<String, String>();
+    HashMap<String, String> mParams = new HashMap<String, String>();
     private String[] mBaseUrls = {"https://oopo.top", "https://oopo.top"};
     private int mUrlIndex = 0;
-    private HashMap<String, g> mCallbacks = new HashMap<>();
+    private HashMap<String, g> mCallbacks = new HashMap<String, g>();
     private OkHttpClient mClient = null;
 
     // ===== Singleton =====
@@ -281,7 +281,7 @@ public class d {
     // ===== Video Management =====
     public int j(String path) { return 0; /* getVideoCount */ }
     public int l(String path) { return 0; /* getFileSize */ }
-    public List<String> m() { return new ArrayList<>(); /* getVideoList */ }
+    public List<String> m() { return new ArrayList<String>(); /* getVideoList */ }
 
     // ===== Download File =====
     public void k(String url, String path, h callback) {

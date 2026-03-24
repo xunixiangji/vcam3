@@ -2,9 +2,13 @@ package com.nvshen.chmp4;
 
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.util.Log;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 import com.ashokvarma.bottomnavigation.BottomNavigationBar;
 import com.nmmedit.protect.NativeUtil;
 import com.telegram.a1064.R;
@@ -13,7 +17,7 @@ import com.telegram.a1064.R;
  * MainActivity - Main UI with Bottom Navigation Tabs
  * Uses BottomNavigationBar with 3 tabs: Camera, Settings, WebView.
  */
-public class MainActivity extends androidx.appcompat.app.c {
+public class MainActivity extends AppCompatActivity {
 
     private String mVersionString = "";
     private int mApiLevel = 11;
@@ -22,7 +26,7 @@ public class MainActivity extends androidx.appcompat.app.c {
     class a implements DialogInterface.OnClickListener {
         final int mButtonId;
 
-        static { NativeUtil.classesInit0(47); }
+        { NativeUtil.classesInit0(47); }
 
         a(int buttonId) { this.mButtonId = buttonId; }
 
@@ -35,13 +39,13 @@ public class MainActivity extends androidx.appcompat.app.c {
             dialog.dismiss();
             if (this.mButtonId == DialogInterface.BUTTON_POSITIVE) {
                 // User accepted update - start download
-                ProgressDialog progressDialog = new ProgressDialog(MainActivity.this);
+                ProgressDialog progressDialog = new ProgressDialog((Context) MainActivity.this);
                 progressDialog.setTitle("Downloading update...");
                 progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
                 progressDialog.setMax(100);
                 progressDialog.setCancelable(false);
                 progressDialog.show();
-                d apiManager = d.B();
+                com.nvshen.chmp4.d apiManager = com.nvshen.chmp4.d.B();
                 // TODO: trigger actual APK download via apiManager
                 Log.d("mp4Camera", "begin downloadAPK ");
             }
@@ -55,7 +59,7 @@ public class MainActivity extends androidx.appcompat.app.c {
         final String mBody;
         final int mStatusCode;
 
-        static { NativeUtil.classesInit0(51); }
+        { NativeUtil.classesInit0(51); }
 
         b(com.nvshen.chmp4.d api, int progress, String body, int statusCode) {
             this.mApiManager = api;
@@ -82,11 +86,11 @@ public class MainActivity extends androidx.appcompat.app.c {
 
     // Inner class: Bottom navigation tab listener
     class c implements BottomNavigationBar.c {
-        final androidx.fragment.app.i mFragmentManager;
+        final FragmentManager mFragmentManager;
 
-        static { NativeUtil.classesInit0(50); }
+        { NativeUtil.classesInit0(50); }
 
-        c(androidx.fragment.app.i fm) { this.mFragmentManager = fm; }
+        c(FragmentManager fm) { this.mFragmentManager = fm; }
 
         /**
          * Recovered from method_128 @ 0x127e8 (size=0)
@@ -120,7 +124,7 @@ public class MainActivity extends androidx.appcompat.app.c {
     class d implements Runnable {
         final String[] mVersionInfo;
 
-        static { NativeUtil.classesInit0(49); }
+        { NativeUtil.classesInit0(49); }
 
         d(String[] versionInfo) { this.mVersionInfo = versionInfo; }
 
@@ -131,7 +135,7 @@ public class MainActivity extends androidx.appcompat.app.c {
         @Override
         public void run() {
             try {
-                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                AlertDialog.Builder builder = new AlertDialog.Builder((Context) MainActivity.this);
                 builder.setTitle("Update Available");
                 builder.setMessage("New version: " + mVersionInfo[0]);
                 builder.setPositiveButton("Update", new a(DialogInterface.BUTTON_POSITIVE));
@@ -151,7 +155,7 @@ public class MainActivity extends androidx.appcompat.app.c {
         final int mProgress;
         final String mBody;
 
-        static { NativeUtil.classesInit0(48); }
+        { NativeUtil.classesInit0(48); }
 
         e(int statusCode, ProgressDialog dialog, com.nvshen.chmp4.d api, int progress, String body) {
             this.mStatusCode = statusCode;
@@ -193,7 +197,7 @@ public class MainActivity extends androidx.appcompat.app.c {
      */
     private boolean N() {
         try {
-            return s2.b.I("su").i().M();
+            return s2.b.I("su").M();
         } catch (Exception e) {
             return false;
         }
@@ -205,8 +209,8 @@ public class MainActivity extends androidx.appcompat.app.c {
      * Switches to the fragment at given tab index.
      */
     public void O(int tabIndex) {
-        androidx.fragment.app.i fm = getSupportFragmentManager();
-        androidx.fragment.app.n transaction = fm.beginTransaction();
+        FragmentManager fm = getSupportFragmentManager();
+        FragmentTransaction transaction = fm.beginTransaction();
         // Hide all fragments, show selected
         switch (tabIndex) {
             case 0:
@@ -238,7 +242,7 @@ public class MainActivity extends androidx.appcompat.app.c {
         try {
             // Install APK via root shell
             String cmd = "pm install -t " + path;
-            s2.b.I(cmd).i();
+            s2.b.I(cmd);
         } catch (Exception e) {
             Log.e("mp4Camera", "Install failed", e);
         }
@@ -248,9 +252,9 @@ public class MainActivity extends androidx.appcompat.app.c {
      * R() - initUI() / refreshUI()
      * Recovered from method_141 @ 0x12e20 (size=53)
      */
-    private void R() {
+    void R() {
         // Initialize API manager with context
-        com.nvshen.chmp4.d.B().S(this);
+        com.nvshen.chmp4.d.B().S((Context) this);
         // Check for updates
         String version = com.nvshen.chmp4.d.B().G();
         this.mVersionString = version;
@@ -355,7 +359,7 @@ public class MainActivity extends androidx.appcompat.app.c {
         try {
             String cacheDir = getCacheDir().getAbsolutePath();
             String cmd = cacheDir + "/sh " + cacheDir + "/chmp4.sh getDeviceId";
-            s2.b.e result = s2.b.I(cmd).i();
+            s2.b.e result = s2.b.I(cmd);
             String deviceId = result.c();
             if (deviceId != null && !deviceId.isEmpty()) {
                 return deviceId.trim();
@@ -376,7 +380,7 @@ public class MainActivity extends androidx.appcompat.app.c {
         setContentView(R.layout.activity_main);
 
         // Initialize API manager
-        com.nvshen.chmp4.d.B().S(this);
+        com.nvshen.chmp4.d.B().S((Context) this);
 
         // Setup bottom navigation
         BottomNavigationBar bottomNav = (BottomNavigationBar) findViewById(R.id.bottom_navigation_bar);

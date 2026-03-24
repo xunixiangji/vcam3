@@ -3,13 +3,12 @@ package com.nvshen.chmp4;
 import android.app.ProgressDialog;
 import android.util.Log;
 import com.nmmedit.protect.NativeUtil;
-import s2.b;
 
 /**
  * CallbackH - Shell Command Result Handler
  * Dismisses progress dialog when shell command completes.
  */
-public final class h implements b.f {
+public final class h implements s2.b.f {
 
     public final ProgressDialog mProgressDialog;
 
@@ -24,7 +23,7 @@ public final class h implements b.f {
      * Dismisses progress dialog on shell result.
      */
     @Override
-    public final void a(b.e shellResult) {
+    public final void a(s2.b.e shellResult) {
         try {
             if (this.mProgressDialog != null && this.mProgressDialog.isShowing()) {
                 this.mProgressDialog.dismiss();

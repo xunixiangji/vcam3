@@ -47,7 +47,7 @@ public class m extends Fragment {
 
     // ===== Inner class: "Start/Inject" button click =====
     class a implements View.OnClickListener {
-        static { NativeUtil.classesInit0(34); }
+        { NativeUtil.classesInit0(34); }
         a() {}
 
         @Override
@@ -60,7 +60,7 @@ public class m extends Fragment {
     // ===== Inner class: File picker callback =====
     class b implements j2.h {
         final Activity mActivity;
-        static { NativeUtil.classesInit0(33); }
+        { NativeUtil.classesInit0(33); }
         b(Activity activity) { this.mActivity = activity; }
 
         /**
@@ -72,7 +72,7 @@ public class m extends Fragment {
                 String filePath = files.get(0);
                 Log.d(TAG, "mp4 file " + filePath);
                 // Set selected video path in API manager
-                d.B().P(filePath);
+                com.nvshen.chmp4.d.B().P(filePath);
                 // Update video list
                 B1();
             }
@@ -90,7 +90,7 @@ public class m extends Fragment {
     // ===== Inner class: Wrapper button handler =====
     class c implements e.a<Button> {
         final e.a mInnerHandler;
-        static { NativeUtil.classesInit0(36); }
+        { NativeUtil.classesInit0(36); }
         c(e.a handler) { this.mInnerHandler = handler; }
 
         @Override
@@ -102,9 +102,9 @@ public class m extends Fragment {
     }
 
     // ===== Inner class: "Stop daemon" button =====
-    class d implements e.a<Button> {
-        static { NativeUtil.classesInit0(35); }
-        d() {}
+    class MInnerD implements e.a<Button> {
+        { NativeUtil.classesInit0(35); }
+        MInnerD() {}
 
         /**
          * Recovered from method_103 @ 0x11c1c (size=58)
@@ -117,9 +117,9 @@ public class m extends Fragment {
     }
 
     // ===== Inner class: "Kill cameraserver" button =====
-    class e implements e.a<Button> {
-        static { NativeUtil.classesInit0(3); }
-        e() {}
+    class MInnerE implements e.a<Button> {
+        { NativeUtil.classesInit0(3); }
+        MInnerE() {}
 
         /**
          * Recovered from method_3 @ 0x0eae8 (size=111)
@@ -133,7 +133,7 @@ public class m extends Fragment {
                 String cmd = String.format("%s %s/sh %s/chmp4.sh resetCamera",
                     "su", cacheDir, cacheDir);
                 Log.d("CHMP4PREVIEWFORMAT", "CI," + cmd);
-                s2.b.I(cmd).i();
+                s2.b.I(cmd);
             } catch (Exception ex) {
                 Log.e(TAG, "resetCamera failed", ex);
             }
@@ -143,7 +143,7 @@ public class m extends Fragment {
     // ===== Inner class: "Video select" button =====
     class f implements e.a<Button> {
         final Activity mActivity;
-        static { NativeUtil.classesInit0(1); }
+        { NativeUtil.classesInit0(1); }
         f(Activity activity) { this.mActivity = activity; }
 
         /**
@@ -165,7 +165,7 @@ public class m extends Fragment {
     // ===== Inner class: "Settings" button =====
     class g implements e.a<Button> {
         final Activity mActivity;
-        static { NativeUtil.classesInit0(8); }
+        { NativeUtil.classesInit0(8); }
         g(Activity activity) { this.mActivity = activity; }
 
         @Override
@@ -176,15 +176,15 @@ public class m extends Fragment {
     }
 
     // ===== Inner class: "Inject hook" button (MOST IMPORTANT) =====
-    class h implements e.a<Button> {
+    class MInnerH implements e.a<Button> {
         final Application mApp;
         final Activity mActivity;
 
         // Sub-handler: "Set SELinux context" (chcon on .so files)
-        class a implements e.a<Button> {
+        class MInnerHA implements e.a<Button> {
             final Context mContext;
-            static { NativeUtil.classesInit0(31); }
-            a(Context context) { this.mContext = context; }
+            { NativeUtil.classesInit0(31); }
+            MInnerHA(Context context) { this.mContext = context; }
 
             @Override
             public void a(n2.e<?> observer, Button button) {
@@ -192,9 +192,9 @@ public class m extends Fragment {
                 Log.d(TAG, "selinux context setup");
                 try {
                     String cacheDir = mContext.getCacheDir().getAbsolutePath();
-                    s2.b.I("chcon u:object_r:system_file:s0 " + cacheDir + "/libCHMP4.so").i();
-                    s2.b.I("chcon u:object_r:system_file:s0 " + cacheDir + "/libhookProxy.so").i();
-                    s2.b.I("chcon u:object_r:system_file:s0 " + cacheDir + "/libshadowhook.so").i();
+                    s2.b.I("chcon u:object_r:system_file:s0 " + cacheDir + "/libCHMP4.so");
+                    s2.b.I("chcon u:object_r:system_file:s0 " + cacheDir + "/libhookProxy.so");
+                    s2.b.I("chcon u:object_r:system_file:s0 " + cacheDir + "/libshadowhook.so");
                 } catch (Exception ex) {
                     Log.e(TAG, "chcon failed", ex);
                 }
@@ -202,9 +202,9 @@ public class m extends Fragment {
         }
 
         // Sub-handler: "Copy files to target directory"
-        class b implements e.a<Button> {
-            static { NativeUtil.classesInit0(30); }
-            b() {}
+        class MInnerHB implements e.a<Button> {
+            { NativeUtil.classesInit0(30); }
+            MInnerHB() {}
 
             @Override
             public void a(n2.e<?> observer, Button button) {
@@ -213,9 +213,9 @@ public class m extends Fragment {
             }
         }
 
-        static { NativeUtil.classesInit0(6); }
+        { NativeUtil.classesInit0(6); }
 
-        h(Application app, Activity activity) {
+        MInnerH(Application app, Activity activity) {
             this.mApp = app;
             this.mActivity = activity;
         }
@@ -235,7 +235,7 @@ public class m extends Fragment {
     // ===== Inner class: "Activate license" button =====
     class i implements e.a<Button> {
         final Activity mActivity;
-        static { NativeUtil.classesInit0(11); }
+        { NativeUtil.classesInit0(11); }
         i(Activity activity) { this.mActivity = activity; }
 
         @Override
@@ -246,10 +246,10 @@ public class m extends Fragment {
     }
 
     // ===== Inner class: "Register device" button =====
-    class j implements e.a<Button> {
+    class MInnerJ implements e.a<Button> {
         final Activity mActivity;
-        static { NativeUtil.classesInit0(10); }
-        j(Activity activity) { this.mActivity = activity; }
+        { NativeUtil.classesInit0(10); }
+        MInnerJ(Activity activity) { this.mActivity = activity; }
 
         @Override
         public void a(n2.e<?> observer, Button button) {
@@ -260,7 +260,7 @@ public class m extends Fragment {
 
     // ===== Inner class: Status polling timer =====
     class k implements Runnable {
-        static { NativeUtil.classesInit0(16); }
+        { NativeUtil.classesInit0(16); }
         k() {}
 
         /**
@@ -281,7 +281,7 @@ public class m extends Fragment {
     // ===== Inner class: "Check update" button =====
     class l implements e.a<Button> {
         final Activity mActivity;
-        static { NativeUtil.classesInit0(14); }
+        { NativeUtil.classesInit0(14); }
         l(Activity activity) { this.mActivity = activity; }
 
         @Override
@@ -295,7 +295,7 @@ public class m extends Fragment {
 
     // ===== Inner class: "Reset/Clear" button =====
     class C0038m implements e.a<Button> {
-        static { NativeUtil.classesInit0(19); }
+        { NativeUtil.classesInit0(19); }
         C0038m() {}
 
         @Override
@@ -307,7 +307,7 @@ public class m extends Fragment {
 
     // ===== Inner class: QR code ImageView click =====
     class n implements e.a<ImageView> {
-        static { NativeUtil.classesInit0(17); }
+        { NativeUtil.classesInit0(17); }
         n() {}
 
         @Override
@@ -319,7 +319,7 @@ public class m extends Fragment {
 
     // ===== Inner class: "Copy device ID" button =====
     class o implements View.OnClickListener {
-        static { NativeUtil.classesInit0(21); }
+        { NativeUtil.classesInit0(21); }
         o() {}
 
         @Override
@@ -340,7 +340,7 @@ public class m extends Fragment {
 
     // ===== Inner class: "Share" button =====
     class p implements View.OnClickListener {
-        static { NativeUtil.classesInit0(20); }
+        { NativeUtil.classesInit0(20); }
         p() {}
 
         @Override
@@ -364,11 +364,11 @@ public class m extends Fragment {
         final TextView mStatusText;
 
         // Sub-class: Updates activation result text on UI thread
-        class a implements Runnable {
+        class QInnerA implements Runnable {
             final int mResultCode;
             final TextView mTextView;
-            static { NativeUtil.classesInit0(46); }
-            a(int resultCode, TextView textView) {
+            { NativeUtil.classesInit0(46); }
+            QInnerA(int resultCode, TextView textView) {
                 this.mResultCode = resultCode;
                 this.mTextView = textView;
             }
@@ -387,7 +387,7 @@ public class m extends Fragment {
             }
         }
 
-        static { NativeUtil.classesInit0(25); }
+        { NativeUtil.classesInit0(25); }
 
         q(EditText codeInput, TextView statusText) {
             this.mCodeInput = codeInput;
@@ -396,7 +396,7 @@ public class m extends Fragment {
 
         /** Activation callback -> updates UI on result */
         public void b(TextView textView, int resultCode) {
-            m.this.getActivity().runOnUiThread(new a(resultCode, textView));
+            m.this.getActivity().runOnUiThread(new QInnerA(resultCode, textView));
         }
 
         @Override
@@ -414,7 +414,7 @@ public class m extends Fragment {
     // ===== Inner class: "Open website" button =====
     class r implements View.OnClickListener {
         final Context mContext;
-        static { NativeUtil.classesInit0(23); }
+        { NativeUtil.classesInit0(23); }
         r(Context context) { this.mContext = context; }
 
         @Override
@@ -430,7 +430,7 @@ public class m extends Fragment {
 
     // ===== Inner class: "Refresh" button =====
     class s implements View.OnClickListener {
-        static { NativeUtil.classesInit0(29); }
+        { NativeUtil.classesInit0(29); }
         s() {}
 
         @Override
@@ -441,7 +441,7 @@ public class m extends Fragment {
 
     // ===== Inner class: Toggle switch (auto-inject) =====
     class t implements CompoundButton.OnCheckedChangeListener {
-        static { NativeUtil.classesInit0(27); }
+        { NativeUtil.classesInit0(27); }
         t() {}
 
         @Override
@@ -454,7 +454,7 @@ public class m extends Fragment {
 
     // ===== Inner class: Toggle switch (hook enabled) =====
     class u implements CompoundButton.OnCheckedChangeListener {
-        static { NativeUtil.classesInit0(38); }
+        { NativeUtil.classesInit0(38); }
         u() {}
 
         /**
@@ -467,7 +467,7 @@ public class m extends Fragment {
             if (isChecked) {
                 // Enable hook - send start command to daemon
                 try {
-                    k serviceManager = k.c();
+                    com.nvshen.chmp4.k serviceManager = com.nvshen.chmp4.k.c();
                     serviceManager.g("hook_enable");
                 } catch (Exception ex) {
                     Log.e(TAG, "Hook enable failed", ex);
@@ -475,7 +475,7 @@ public class m extends Fragment {
             } else {
                 // Disable hook
                 try {
-                    k serviceManager = k.c();
+                    com.nvshen.chmp4.k serviceManager = com.nvshen.chmp4.k.c();
                     serviceManager.g("hook_disable");
                 } catch (Exception ex) {
                     Log.e(TAG, "Hook disable failed", ex);
@@ -493,7 +493,7 @@ public class m extends Fragment {
         final Spinner mSpinner4;
         final Spinner mSpinner5;
 
-        static { NativeUtil.classesInit0(37); }
+        { NativeUtil.classesInit0(37); }
 
         v(Spinner s1, Context ctx, Spinner s2, Spinner s3, Spinner s4, Spinner s5) {
             this.mSpinner1 = s1;
@@ -529,7 +529,7 @@ public class m extends Fragment {
                 Log.d(TAG, String.format("size:%dx%d", width, height));
 
                 // Send to daemon via binder
-                k serviceManager = k.c();
+                com.nvshen.chmp4.k serviceManager = com.nvshen.chmp4.k.c();
                 serviceManager.g("CHMP4WIDTH," + width);
                 serviceManager.g("CHMP4HEIGHT," + height);
 
@@ -556,7 +556,7 @@ public class m extends Fragment {
                 NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
                 if (activeNetwork != null && activeNetwork.isConnected()) {
                     // Network is available, check service
-                    k serviceManager = k.c();
+                    com.nvshen.chmp4.k serviceManager = com.nvshen.chmp4.k.c();
                     return serviceManager.d() > 0;
                 }
             }
@@ -615,7 +615,7 @@ public class m extends Fragment {
             String cmd = String.format("su %s/sh %s/chmp4.sh %s",
                 cacheDir, cacheDir, command);
             Log.d("CHMP4PREVIEWFORMAT", cmd);
-            s2.b.I(cmd).i();
+            s2.b.I(cmd);
         } catch (Exception ex) {
             Log.e(TAG, "Daemon setup failed", ex);
         }
@@ -633,7 +633,7 @@ public class m extends Fragment {
             // Find status text and update
             TextView statusText = (TextView) view.findViewById(R.id.text_status);
             if (statusText != null) {
-                k serviceManager = k.c();
+                com.nvshen.chmp4.k serviceManager = com.nvshen.chmp4.k.c();
                 int status = serviceManager.d();
                 if (status > 0) {
                     statusText.setText("Running");
@@ -657,7 +657,7 @@ public class m extends Fragment {
         Log.d(TAG, "Updating video list");
         try {
             // Find .mp4 files on device
-            s2.b.e result = s2.b.I("find /sdcard/Movies/ -iname \"*.mp4\"").i();
+            s2.b.e result = s2.b.I("find /sdcard/Movies/ -iname \"*.mp4\"");
             String output = result.c();
             if (output != null) {
                 String[] files = output.split("\n");
@@ -682,7 +682,7 @@ public class m extends Fragment {
      * Inflates settings layout and initializes views.
      */
     @Override
-    public View d0(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         Log.d(TAG, "onCreateView");
         View view = inflater.inflate(R.layout.fragment_settings, container, false);
         if (view != null) {
@@ -734,7 +734,7 @@ public class m extends Fragment {
         Log.d(TAG, "stopDaemon");
         try {
             // Kill daemon process
-            s2.b.I("pgrep -f initchmp4 -L 9").i();
+            s2.b.I("pgrep -f initchmp4 -L 9");
             // Refresh status
             A1();
         } catch (Exception ex) {
@@ -751,7 +751,7 @@ public class m extends Fragment {
         try {
             String cacheDir = context.getCacheDir().getAbsolutePath();
             String cmd = cacheDir + "/sh " + cacheDir + "/chmp4.sh getDeviceInfo";
-            s2.b.e result = s2.b.I(cmd).i();
+            s2.b.e result = s2.b.I(cmd);
             String info = result.c();
             if (info != null && !info.isEmpty()) {
                 return info.trim();
@@ -825,8 +825,8 @@ public class m extends Fragment {
      * Cleans up handlers and polling.
      */
     @Override
-    public void x0() {
-        super.x0();
+    public void onDestroyView() {
+        super.onDestroyView();
         Log.d(TAG, "onDestroyView");
         // Remove status polling callbacks
         mHandler.removeCallbacks(mStatusChecker);

@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
+import androidx.appcompat.app.AppCompatActivity;
 import com.nmmedit.protect.NativeUtil;
 import com.telegram.a1064.R;
 import java.io.File;
@@ -18,20 +19,19 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import k2.o;
-import s2.b;
 
 /**
  * SplashActivity - Entry point activity
  * Handles root check, SELinux, native binary setup, then launches MainActivity.
  */
-public class SplashActivity extends androidx.appcompat.app.c {
+public class SplashActivity extends AppCompatActivity {
 
     public static int sInitState;
     private int mSetupStep = 0;
 
     // Inner class: Error dialog dismiss handler
     class a implements DialogInterface.OnClickListener {
-        static { NativeUtil.classesInit0(54); }
+        { NativeUtil.classesInit0(54); }
         a() {}
 
         /**
@@ -50,7 +50,7 @@ public class SplashActivity extends androidx.appcompat.app.c {
         final EditText mInputField;
         final Activity mActivity;
 
-        static { NativeUtil.classesInit0(53); }
+        { NativeUtil.classesInit0(53); }
 
         b(EditText input, Activity activity) {
             this.mInputField = input;
@@ -67,7 +67,7 @@ public class SplashActivity extends androidx.appcompat.app.c {
                 String code = this.mInputField.getText().toString().trim();
                 if (!code.isEmpty()) {
                     Log.d("CHMP4", "Activation code entered: " + code);
-                    d.B().f(code, new d.f() {
+                    com.nvshen.chmp4.d.B().f(code, new com.nvshen.chmp4.d.f() {
                         @Override
                         public void a(int resultCode) {
                             Log.d("CHMP4", "Activation result: " + resultCode);
@@ -85,7 +85,7 @@ public class SplashActivity extends androidx.appcompat.app.c {
     static {
         NativeUtil.classesInit0(39);
         s2.b.f5887c = false;
-        s2.b.N(b.a.a().b(8).c(10L));
+        s2.b.N(new s2.b.a().b(8).c(10L));
         sInitState = 1;
     }
 
@@ -96,11 +96,12 @@ public class SplashActivity extends androidx.appcompat.app.c {
      */
     private void I() {
         // Request root shell and proceed with setup
-        s2.b.I("su").i().a(new b.f() {
+        s2.b.e result = s2.b.I("su");
+        result.a(new s2.b.f() {
             @Override
-            public void a(b.e result) {
+            public void a(s2.b.e result2) {
                 try {
-                    SplashActivity.this.J(s2.b.I("su").i());
+                    SplashActivity.this.J(s2.b.I("su"));
                 } catch (Throwable t) {
                     Log.e("CHMP4", "Root check failed", t);
                     SplashActivity.this.M();
@@ -113,21 +114,23 @@ public class SplashActivity extends androidx.appcompat.app.c {
      * J(shell) - onRootResult()
      * Already decompiled - checks SELinux, copies files, launches MainActivity.
      */
-    public void J(s2.b shell) throws Throwable {
+    public void J(s2.b.e shell) throws Throwable {
         if (!shell.M()) {
             M();
             return;
         }
-        if (s2.b.I("getenforce").i().c().contains("Enforcing")) {
-            s2.b.I("setenforce 0").i();
-            if (s2.b.I("getenforce").i().c().contains("Permissive")) {
-                s2.b.I("setenforce 1").i();
+        String getenforceOutput = s2.b.I("getenforce").c();
+        if (getenforceOutput != null && getenforceOutput.contains("Enforcing")) {
+            s2.b.I("setenforce 0");
+            String getenforceOutput2 = s2.b.I("getenforce").c();
+            if (getenforceOutput2 != null && getenforceOutput2.contains("Permissive")) {
+                s2.b.I("setenforce 1");
             } else {
                 Log.e("HOOK", "setenforce 0 fail!");
                 o.j(getString(R.string.check_selinux));
             }
         }
-        Intent intent = new Intent(this, MainActivity.class);
+        Intent intent = new Intent((Context) this, MainActivity.class);
         os12copyfile();
         startActivity(intent);
         finish();
@@ -170,7 +173,7 @@ public class SplashActivity extends androidx.appcompat.app.c {
             @Override
             public void run() {
                 try {
-                    AlertDialog.Builder builder = new AlertDialog.Builder(SplashActivity.this);
+                    AlertDialog.Builder builder = new AlertDialog.Builder((Context) SplashActivity.this);
                     builder.setTitle("Root Required");
                     builder.setMessage(getString(R.string.check_selinux));
                     builder.setPositiveButton("OK", new a());

@@ -16,7 +16,7 @@ class j implements e.a<Button> {
     private String mCommand;
 
     // Inner class: Button state updater
-    class a implements e.a<Button> {
+    static class a implements e.a<Button> {
         final Button mButton;
 
         static { NativeUtil.classesInit0(45); }
