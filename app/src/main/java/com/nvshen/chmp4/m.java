@@ -808,6 +808,12 @@ public class m extends Fragment {
      * Inflates R.layout.fragment_settings, calls C1() and u1()
      */
     @Override
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        return d0(inflater, container, savedInstanceState);
+    }
+
+    /** d0() - original bytecode entry point for onCreateView */
     public View d0(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_settings, container, false);
         if (view != null) {
