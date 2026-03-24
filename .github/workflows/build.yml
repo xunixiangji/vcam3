@@ -18,16 +18,17 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
       - name: Install apktool
         run: |
           mkdir -p ~/bin
-          # Download apktool wrapper script
           cat > ~/bin/apktool << 'WRAPPER'
           #!/bin/bash
           java -jar ~/bin/apktool.jar "$@"
           WRAPPER
           chmod +x ~/bin/apktool
-          # Download apktool jar (use GitHub releases instead of bitbucket)
           wget -q https://github.com/iBotPeaches/Apktool/releases/download/v2.9.3/apktool_2.9.3.jar -O ~/bin/apktool.jar
           export PATH=~/bin:$PATH
           apktool --version
@@ -35,19 +36,33 @@ jobs:
       - name: Build APK
         run: |
           export PATH=~/bin:$PATH
-          apktool b demo_source -o vcam-modified.apk --use-aapt2
+          apktool b demo_source -o vcam-unsigned.apk --use-aapt2
 
-      - name: Sign APK
+      - name: Sign APK (v1+v2+v3)
         run: |
+          # Generate debug keystore
           keytool -genkey -v -keystore debug.keystore \
-            -alias androiddebugkey -keyalg RSA -keysize 2048 \
+            -alias debug -keyalg RSA -keysize 2048 \
             -validity 10000 -storepass android -keypass android \
             -dname "CN=Debug,O=Debug,C=US"
 
-          jarsigner -keystore debug.keystore -storepass android \
-            -signedjar vcam-signed.apk vcam-modified.apk androiddebugkey
+          # Zipalign first (required before apksigner)
+          zipalign -v -p 4 vcam-unsigned.apk vcam-aligned.apk
 
-          cp vcam-signed.apk vcam-final.apk
+          # Sign with apksigner (v1+v2+v3 schemes)
+          apksigner sign \
+            --ks debug.keystore \
+            --ks-pass pass:android \
+            --ks-key-alias debug \
+            --key-pass pass:android \
+            --v1-signing-enabled true \
+            --v2-signing-enabled true \
+            --v3-signing-enabled true \
+            --out vcam-final.apk \
+            vcam-aligned.apk
+
+          # Verify
+          apksigner verify --verbose vcam-final.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
