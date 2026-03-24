@@ -808,7 +808,6 @@ public class m extends Fragment {
      * Inflates R.layout.fragment_settings, calls C1() and u1()
      */
     @Override
-    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         return d0(inflater, container, savedInstanceState);
     }
@@ -1065,7 +1064,6 @@ public class m extends Fragment {
      * Recovered from method_16 @ 0x0f1c0 (size=62)
      * Removes status polling callbacks
      */
-    @Override
     @Override
     public void onDestroyView() {
         super.onDestroyView();
