@@ -31,22 +31,31 @@ jobs:
       - name: Build APK
         run: |
           chmod +x gradlew
-          ./gradlew assembleDebug --stacktrace 2>&1 | tail -50
-
-      - name: Find and upload APK
-        if: success()
-        run: |
-          echo "=== Finding APK files ==="
+          echo "=== Compiling ==="
+          ./gradlew assembleDebug --stacktrace 2>&1 || true
+          echo ""
+          echo "=== Build output ==="
           find . -name "*.apk" -type f 2>/dev/null
-          # Copy to a known location
+          find . -path "*/build/outputs/*" -type f 2>/dev/null
+          echo ""
+          echo "=== Checking for compile errors ==="
+          find . -name "*.java" -path "*/com/nvshen/*" | head -20
+          echo ""
+          echo "=== Java compile errors if any ==="
+          ./gradlew compileDebugJavaSources 2>&1 | grep -i "error\|cannot\|symbol\|package" | head -30 || true
+
+      - name: Copy APK
+        if: always()
+        run: |
           mkdir -p output
-          find . -name "*.apk" -type f -exec cp {} output/ \;
-          ls -la output/
+          find . -name "*.apk" -type f -exec cp {} output/ \; 2>/dev/null
+          ls -la output/ 2>/dev/null || echo "No APK found"
 
       - name: Upload APK
-        if: success()
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: vcam-pure-java-apk
           path: output/
+          if-no-files-found: warn
           retention-days: 30
