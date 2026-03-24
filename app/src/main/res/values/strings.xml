@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">VCam Reversed</string>
+    <string name="replace_camera_success">Camera replaced successfully</string>
+    <string name="replace_camera_fail">Camera replacement failed</string>
+</resources>
