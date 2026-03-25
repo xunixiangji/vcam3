@@ -197,23 +197,120 @@ public class m extends Fragment {
         }
     }
 
-    // ===== Inner class: "Inject hook" button =====
-    // Files already extracted by SplashActivity.os12copyfile()
-    // chmp4.sh initchmp4 handles SELinux policy, file deploy to /data/camera, and injection
-    // Java layer just needs to call r1() to start the daemon
+    // ===== Inner class: "Inject hook" button (MOST IMPORTANT) =====
     class h implements e.a<Button> {
         final Application mApp;
         final Activity mActivity;
+
+        // Sub-handler: "Set SELinux context" (chcon on .so files)
+        class MInnerHA implements e.a<Button> {
+            final Context mContext;
+            MInnerHA(Context context) { this.mContext = context; }
+
+            @Override
+            public void a(n2.e<?> observer, Button button) {
+                Log.d(TAG, "selinux ");
+                try {
+                    String cacheDir = mContext.getCacheDir().getAbsolutePath();
+                    s2.b.I("chcon u:object_r:system_file:s0 " + cacheDir + "/libCHMP4.so");
+                    s2.b.I("chcon u:object_r:system_file:s0 " + cacheDir + "/libhookProxy.so");
+                    s2.b.I("chcon u:object_r:system_file:s0 " + cacheDir + "/libshadowhook.so");
+                    s2.b.I("chcon u:object_r:system_file:s0 " + cacheDir + "/CHMP4");
+                } catch (Exception ex) {
+                    Log.e(TAG, "chcon failed", ex);
+                }
+            }
+        }
+
+        // Sub-handler: "Copy files to target directory"
+        class MInnerHB implements e.a<Button> {
+            MInnerHB() {}
+
+            @Override
+            public void a(n2.e<?> observer, Button button) {
+                Log.d(TAG, "Copying hook files");
+                try {
+                    Context ctx = mActivity;
+                    String cacheDir = ctx.getCacheDir().getAbsolutePath();
+                    // Copy native binaries from assets to cache dir
+                    // Asset filenames have suffix: CHMP4-1364 (64bit) or CHMP4-1032 (32bit)
+                    String abi = Build.CPU_ABI;
+                    boolean is64 = abi.contains("64");
+                    String binDir = is64 ? "bin64" : "bin";
+                    String suffix = is64 ? "-1364" : "-1032";
+                    String[][] fileMap = {
+                        {binDir + "/CHMP4" + suffix, "CHMP4"},
+                        {binDir + "/libCHMP4" + suffix + ".so", "libCHMP4.so"},
+                        {binDir + "/libhookProxy" + suffix + ".so", "libhookProxy.so"},
+                        {binDir + "/libshadowhook" + suffix + ".so", "libshadowhook.so"},
+                        {"chmp4.sh", "chmp4.sh"},
+                        {"sh", "sh"},
+                    };
+                    // Delete old files first (may be root-owned from previous copy)
+                    for (String[] entry : fileMap) {
+                        s2.b.I("rm -f " + cacheDir + "/" + entry[1]);
+                    }
+
+                    for (String[] entry : fileMap) {
+                        try {
+                            java.io.InputStream is = ctx.getAssets().open(entry[0]);
+                            java.io.FileOutputStream fos = new java.io.FileOutputStream(cacheDir + "/" + entry[1]);
+                            byte[] buffer = new byte[8192];
+                            int len;
+                            while ((len = is.read(buffer)) != -1) {
+                                fos.write(buffer, 0, len);
+                            }
+                            fos.close();
+                            is.close();
+                            Log.d(TAG, "copied " + entry[0] + " -> " + entry[1]);
+                        } catch (Exception ex) {
+                            Log.e(TAG, "copyDown err " + entry[0], ex);
+                        }
+                    }
+                    // Make executable
+                    s2.b.I("chmod +x " + cacheDir + "/sh");
+                    s2.b.I("chmod +x " + cacheDir + "/CHMP4");
+                    s2.b.I("chmod +x " + cacheDir + "/chmp4.sh");
+                } catch (Exception ex) {
+                    Log.e(TAG, "Copy files failed", ex);
+                }
+            }
+        }
 
         h(Application app, Activity activity) {
             this.mApp = app;
             this.mActivity = activity;
         }
 
+        /**
+         * Triggers the full injection sequence:
+         * 1. Copy files from assets
+         * 2. Set SELinux context
+         * 3. Start daemon injection
+         */
         @Override
         public void a(final n2.e<?> observer, final Button button) {
-            Log.d(TAG, "button_start_player");
-            r1();
+            Log.d(TAG, "button_start_player - full inject sequence");
+            com.nvshen.chmp4.d.B().Y("Injecting VCam...");
+            // Run copy + selinux on background thread, then inject
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    // Step 1: Copy files from assets
+                    new MInnerHB().a(observer, button);
+                    // Step 2: Set SELinux context
+                    new MInnerHA(mActivity).a(observer, button);
+                    // Step 3: Start daemon (r1() already runs on background via api.g())
+                    if (mActivity != null) {
+                        mActivity.runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                r1();
+                            }
+                        });
+                    }
+                }
+            }).start();
         }
     }
 
@@ -225,38 +322,7 @@ public class m extends Fragment {
         @Override
         public void a(n2.e<?> observer, Button button) {
             Log.d(TAG, "Activate license clicked");
-            if (mActivity == null) return;
-            // Show dialog with EditText for activation code input
-            android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(mActivity);
-            builder.setTitle(R.string.input_cdkey);
-            final EditText input = new EditText(mActivity);
-            input.setHint(R.string.input_cdkey);
-            builder.setView(input);
-            builder.setPositiveButton(android.R.string.ok, new android.content.DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(android.content.DialogInterface dialog, int which) {
-                    String code = input.getText().toString().trim();
-                    if (code.length() > 0) {
-                        com.nvshen.chmp4.d.B().f(code, new com.nvshen.chmp4.d.f() {
-                            @Override
-                            public void a(int resultCode) {
-                                Log.d(TAG, "Activation result: " + resultCode);
-                                if (mActivity != null) {
-                                    mActivity.runOnUiThread(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            A1(); // refresh status
-                                            w1(null); // refresh expiry display
-                                        }
-                                    });
-                                }
-                            }
-                        });
-                    }
-                }
-            });
-            builder.setNegativeButton(android.R.string.cancel, null);
-            builder.show();
+            // Navigate to activation screen or show dialog
         }
     }
 
@@ -268,16 +334,6 @@ public class m extends Fragment {
         @Override
         public void a(n2.e<?> observer, Button button) {
             Log.d(TAG, "Register device clicked");
-            if (mActivity == null) return;
-            // Send device info to server for registration
-            Context ctx = mActivity;
-            String cacheDir = ctx.getCacheDir().getAbsolutePath();
-            String cmd = String.format("%s/sh %s/chmp4.sh getDeviceInfo", cacheDir, cacheDir);
-            s2.b.e result = s2.b.I(cmd);
-            if (result != null && result.a() == 0) {
-                String info = result.c();
-                com.nvshen.chmp4.d.B().h("deviceInfo", info);
-            }
         }
     }
 
@@ -929,9 +985,8 @@ public class m extends Fragment {
             return;
         }
 
-        // Match original nmmp string 6: "%s%s/sh %s/chmp4.sh initchmp4 %d %d %s %s %s"
-        // No single quotes around mp4file - the shell script handles it
-        String command = String.format("%s/sh %s/chmp4.sh initchmp4 %d %d %s %s %s",
+        // libsu persistent shell - no need for nohup, shell survives cameraserver restart
+        String command = String.format("%s/sh %s/chmp4.sh initchmp4 %d %d %s '%s' %s",
             cacheDir, cacheDir, remain, now, token, mp4file, filterStr);
 
         Log.d(TAG, "r1: " + command);

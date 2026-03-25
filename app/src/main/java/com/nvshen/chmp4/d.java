@@ -339,12 +339,9 @@ public class d {
                 if (flip == 2) filterStr = filterStr + ",vflip";
             }
 
-            // Send video path + filter string to daemon via binder
-            // Format matches nmmp string usage: videoPath + filterStr
-            String command = videoPath + filterStr;
             k serviceManager = k.c();
             if (serviceManager != null) {
-                serviceManager.g(command);
+                serviceManager.g(videoPath);
             }
 
             if (mContext != null) {
@@ -369,32 +366,41 @@ public class d {
         this.mCurrentTime = prefs.getInt("currentTime", 0);
         this.mUrlIndex = prefs.getInt("URLINDEX", 0);
         this.mDeviceId = prefs.getString("deviceId", "");
-        // deviceId will be loaded from shell by SplashActivity.J() calling loadDeviceIdFromShell()
-        // Do NOT use Java ANDROID_ID - it returns per-app-signing-key value on Android 12+
-        // The shell command `settings get secure android_id` returns the system-level value
+
+        // Use android_id as fallback deviceId (no shell needed)
+        if (this.mDeviceId == null || this.mDeviceId.length() == 0) {
+            try {
+                this.mDeviceId = android.provider.Settings.Secure.getString(
+                    mContext.getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
+            } catch (Exception e) {
+                this.mDeviceId = "unknown";
+            }
+        }
     }
 
-    /** loadDeviceIdFromShell() - SYNCHRONOUS, call from background thread only.
-     *  Uses root shell to get system-level android_id (not per-app-signing-key).
-     *  Called by SplashActivity.J() which is already on a background thread. */
+    /** loadDeviceIdFromShell() - called AFTER SplashActivity copies shell files */
     public void loadDeviceIdFromShell() {
         if (mContext == null) return;
-        try {
-            String cacheDir = mContext.getCacheDir().getAbsolutePath();
-            s2.b.e result = s2.b.I(String.format("%s/sh %s/chmp4.sh getDeviceId", cacheDir, cacheDir));
-            if (result != null && result.a() == 0) {
-                String deviceId = result.c();
-                if (deviceId != null && deviceId.trim().length() > 0) {
-                    mDeviceId = deviceId.trim();
-                    // Save to prefs so next launch doesn't need shell
-                    mContext.getSharedPreferences("CHMP4", Context.MODE_PRIVATE)
-                        .edit().putString("deviceId", mDeviceId).apply();
-                    Log.d(TAG, "deviceId from shell: " + mDeviceId);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    String cacheDir = mContext.getCacheDir().getAbsolutePath();
+                    s2.b.e result = s2.b.I(String.format("%s/sh %s/chmp4.sh getDeviceId", cacheDir, cacheDir));
+                    if (result != null && result.a() == 0) {
+                        String deviceId = result.c();
+                        if (deviceId != null && deviceId.trim().length() > 0) {
+                            mDeviceId = deviceId.trim();
+                            // Save to prefs
+                            mContext.getSharedPreferences("CHMP4", Context.MODE_PRIVATE)
+                                .edit().putString("deviceId", mDeviceId).apply();
+                        }
+                    }
+                } catch (Exception e) {
+                    Log.e(TAG, "loadDeviceIdFromShell failed", e);
                 }
             }
-        } catch (Exception e) {
-            Log.e(TAG, "loadDeviceIdFromShell failed", e);
-        }
+        }).start();
     }
 
     /** setExtraParam(param) */

@@ -103,29 +103,12 @@ public class k {
         return mRemoteBinder;
     }
 
-    /**
-     * getStatus() -> connection status via Binder transact
-     * RESTORED FROM BYTECODES: sends Parcel with writeInt x2, calls transact, reads result
-     * Also logs status with "A" tag + "/" separator
-     */
+    /** getStatus() -> connection status (0 = not connected, 1 = connected) */
     public int d() {
-        if (mRemoteBinder == null || !mRemoteBinder.isBinderAlive()) {
-            return 0;
+        if (mRemoteBinder != null && mRemoteBinder.isBinderAlive()) {
+            return mStatus;
         }
-        try {
-            Parcel data = Parcel.obtain();
-            Parcel reply = Parcel.obtain();
-            data.writeStrongBinder(mLocalBinder);
-            mRemoteBinder.transact(0, data, reply, 0);
-            int status = reply.readInt();
-            Log.d("A", "LL" + status + "/" + mStatus);
-            data.recycle();
-            reply.recycle();
-            return status;
-        } catch (Exception ex) {
-            Log.e(TAG, "getStatus failed", ex);
-            return 0;
-        }
+        return 0;
     }
 
     /**
@@ -235,25 +218,18 @@ public class k {
     }
 
     /**
-     * getTransactionName(code) -> name string via Binder transact
-     * RESTORED FROM BYTECODES: NOT a hardcoded switch! Sends transact and reads result.
-     * Uses Parcel.writeInt + transact + readInt → Integer.toString
+     * getTransactionName(code) -> name string
+     * Returns a descriptive name for the given transaction code
      */
     public String j(int transactionCode) {
-        if (mRemoteBinder == null || !mRemoteBinder.isBinderAlive()) {
-            return "";
-        }
-        try {
-            Parcel data = Parcel.obtain();
-            Parcel reply = Parcel.obtain();
-            data.writeInt(transactionCode);
-            mRemoteBinder.transact(transactionCode, data, reply, 0);
-            int result = reply.readInt();
-            data.recycle();
-            reply.recycle();
-            return String.valueOf(result);
-        } catch (Exception ex) {
-            return "";
+        switch (transactionCode) {
+            case 0: return "registerClient";
+            case 1: return "licenseVerify";
+            case 2: return "subCommand";
+            case 3: return "setSwapJpegWH";
+            case 4: return "toggleCamera";
+            case 5: return "setHeightPadding";
+            default: return "";
         }
     }
 
@@ -279,26 +255,8 @@ public class k {
         }
     }
 
-    /**
-     * getConnectionCount() -> int via Binder transact
-     * RESTORED FROM BYTECODES: sends transact query, reads int result
-     * NOT a simple mStatus return!
-     */
+    /** getConnectionCount() */
     public int l() {
-        if (mRemoteBinder == null || !mRemoteBinder.isBinderAlive()) {
-            return 0;
-        }
-        try {
-            Parcel data = Parcel.obtain();
-            Parcel reply = Parcel.obtain();
-            data.writeStrongBinder(mLocalBinder);
-            mRemoteBinder.transact(0, data, reply, 0);
-            int result = reply.readInt();
-            data.recycle();
-            reply.recycle();
-            return result;
-        } catch (Exception ex) {
-            return 0;
-        }
+        return mStatus;
     }
 }

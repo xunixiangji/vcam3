@@ -15,10 +15,12 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import com.nmmedit.protect.NativeUtil;
 import com.telegram.a1064.R;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 
 /**
  * SplashActivity - RESTORED matching original demo behavior
@@ -33,10 +35,6 @@ public class SplashActivity extends AppCompatActivity {
 
     static {
         NativeUtil.classesInit0(39);
-        // Match demo: configure libsu shell before any shell is created
-        s2.b.f5887c = false;  // disable shell logging
-        s2.b.N(s2.b.a.a().b(8).c(10L));  // shell config: timeout=8, bufferSize=10
-        sInitState = 1;
     }
 
     @Override
@@ -48,17 +46,26 @@ public class SplashActivity extends AppCompatActivity {
     }
 
     /**
-     * I() - initSetup: try to get root via libsu (s2.b)
-     * This triggers Magisk/KSU authorization prompt through libsu
+     * I() - initSetup: try to get root via "su" command
+     * This triggers Magisk/KSU authorization prompt
      */
     private void I() {
         new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    // Use libsu to get root shell - handles Magisk/KSU properly
-                    s2.b.e result = s2.b.I("id");
-                    if (result != null && result.M()) {
+                    // Try "su" - this triggers Magisk/KSU auth dialog
+                    Process process = Runtime.getRuntime().exec("su");
+                    process.getOutputStream().write("id\n".getBytes());
+                    process.getOutputStream().write("exit\n".getBytes());
+                    process.getOutputStream().flush();
+                    int exitCode = process.waitFor();
+
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+                    String output = reader.readLine();
+                    reader.close();
+
+                    if (exitCode == 0 && output != null && output.contains("uid=0")) {
                         // Root granted! Proceed with setup
                         J("su");
                     } else {
@@ -75,19 +82,16 @@ public class SplashActivity extends AppCompatActivity {
 
     /**
      * J(suPath) - onRootResult: root obtained, check SELinux, copy files, launch MainActivity
-     * Uses libsu (s2.b) for all shell commands - matches demo behavior
      */
     public void J(String suPath) {
         try {
-            // Check SELinux using libsu
-            s2.b.e geResult = s2.b.I("getenforce");
-            String getenforce = (geResult != null) ? geResult.c() : "";
-            if (getenforce.contains("Enforcing")) {
-                s2.b.I("setenforce 0");
-                s2.b.e checkResult = s2.b.I("getenforce");
-                String check = (checkResult != null) ? checkResult.c() : "";
-                if (check.contains("Permissive")) {
-                    s2.b.I("setenforce 1"); // test: can restore
+            // Check SELinux
+            String getenforce = execCmd(suPath, "getenforce");
+            if (getenforce != null && getenforce.contains("Enforcing")) {
+                execCmd(suPath, "setenforce 0");
+                String check = execCmd(suPath, "getenforce");
+                if (check != null && check.contains("Permissive")) {
+                    execCmd(suPath, "setenforce 1"); // test: can restore
                 } else {
                     Log.e("HOOK", "setenforce 0 fail!");
                     runOnUiThread(new Runnable() {
@@ -100,10 +104,10 @@ public class SplashActivity extends AppCompatActivity {
                 }
             }
 
-            // Copy native binaries from assets to cacheDir
+            // Copy native binaries
             os12copyfile();
 
-            // Load deviceId from shell (SYNCHRONOUS - we're on background thread)
+            // Now that shell files exist, load deviceId from shell
             d.B().loadDeviceIdFromShell();
 
             // Launch MainActivity
@@ -138,13 +142,34 @@ public class SplashActivity extends AppCompatActivity {
                     input.setHint("\u8bf7\u8f93\u5165su\u8def\u5f84"); // 请输入su路径
                     builder.setView(input);
 
-                    // ✔ button - retry root check
+                    // ✔ button - try with custom su path
                     builder.setPositiveButton("\u2714", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            dialog.dismiss();
-                            // Retry with libsu
-                            I();
+                            final String suPath = input.getText().toString().trim();
+                            if (!suPath.isEmpty()) {
+                                dialog.dismiss();
+                                new Thread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        try {
+                                            Process p = Runtime.getRuntime().exec(suPath);
+                                            p.getOutputStream().write("id\n".getBytes());
+                                            p.getOutputStream().write("exit\n".getBytes());
+                                            p.getOutputStream().flush();
+                                            int code = p.waitFor();
+                                            if (code == 0) {
+                                                J(suPath);
+                                            } else {
+                                                M(); // show dialog again
+                                            }
+                                        } catch (Exception e2) {
+                                            Log.e(TAG, "Custom su failed", e2);
+                                            M();
+                                        }
+                                    }
+                                }).start();
+                            }
                         }
                     });
 
@@ -174,7 +199,25 @@ public class SplashActivity extends AppCompatActivity {
         }
     }
 
-/** Check if device supports 64-bit ARM */
+    /** Execute a command via su and return output */
+    private String execCmd(String suPath, String command) {
+        try {
+            Process p = Runtime.getRuntime().exec(new String[]{suPath, "-c", command});
+            BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                sb.append(line);
+            }
+            reader.close();
+            p.waitFor();
+            return sb.toString();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /** Check if device supports 64-bit ARM */
     public static boolean isos64bit() {
         for (String abi : Build.SUPPORTED_ABIS) {
             if (abi.contains("arm64")) return true;
