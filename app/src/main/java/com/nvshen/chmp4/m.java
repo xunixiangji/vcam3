@@ -283,34 +283,17 @@ public class m extends Fragment {
         }
 
         /**
-         * Triggers the full injection sequence:
-         * 1. Copy files from assets
-         * 2. Set SELinux context
-         * 3. Start daemon injection
+         * Triggers injection — directly calls r1()
+         * LOGCAT CONFIRMED: demo does NOT re-copy files on inject button click.
+         * Our logcat shows MInnerHB "rm -f cache/CHMP4" overwrites SplashActivity's
+         * path-replaced chmp4.sh, causing exit code 10.
+         * Demo logcat (A13): no "Copying hook files" or "rm -f" during injection.
+         * Files are already copied by SplashActivity.os12copyfile() at startup.
          */
         @Override
         public void a(final n2.e<?> observer, final Button button) {
-            Log.d(TAG, "button_start_player - full inject sequence");
-            com.nvshen.chmp4.d.B().Y("Injecting VCam...");
-            // Run copy + selinux on background thread, then inject
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    // Step 1: Copy files from assets
-                    new MInnerHB().a(observer, button);
-                    // Step 2: Set SELinux context
-                    new MInnerHA(mActivity).a(observer, button);
-                    // Step 3: Start daemon (r1() already runs on background via api.g())
-                    if (mActivity != null) {
-                        mActivity.runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                r1();
-                            }
-                        });
-                    }
-                }
-            }).start();
+            Log.d(TAG, "button_start_player");
+            r1();
         }
     }
 
