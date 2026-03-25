@@ -1101,11 +1101,23 @@ public class m extends Fragment {
         }
 
         // ---- "Start Player" button ----
+        // BYTECODE [entry 14, pc=139+218]: D() check → setEnabled(VZ)
+        // Demo disables inject button if remainingDays <= 0 (not activated)
         Button btnStartPlayer = (Button) view.findViewById(R.id.button_start_player);
         if (btnStartPlayer != null) {
+            // BYTECODE CONFIRMED: check activation before enabling button
+            int remainDays = com.nvshen.chmp4.d.B().D();
+            btnStartPlayer.setEnabled(remainDays > 0);
+
             btnStartPlayer.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    // Double-check activation at click time
+                    int days = com.nvshen.chmp4.d.B().D();
+                    if (days <= 0) {
+                        com.nvshen.chmp4.d.B().Y("Please activate first");
+                        return;
+                    }
                     Log.d(TAG, "button_start_player: Start Player clicked");
                     r1();
                 }
