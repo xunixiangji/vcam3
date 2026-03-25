@@ -60,6 +60,10 @@ public class m extends Fragment {
     Handler mHandler = new Handler();
     Runnable mStatusChecker = new k();
 
+    // DEMO CONFIRMED: adaptive retry - if binder not found after injection, auto-retry once
+    boolean mInjectionDone = false;
+    boolean mRetryDone = false;
+
     // ===== Inner class: "Start/Inject" button click =====
     class a implements View.OnClickListener {
         a() {}
@@ -336,7 +340,7 @@ public class m extends Fragment {
             } catch (Exception ex) {
                 Log.e(TAG, "Status poll failed", ex);
             }
-            mHandler.postDelayed(mStatusChecker, 3000);
+            mHandler.postDelayed(mStatusChecker, 2000);  // DEMO: polls every ~2 seconds
         }
     }
 
@@ -737,20 +741,36 @@ public class m extends Fragment {
             }
         }
 
-        // Update player status — DEMO CONFIRMED: polls b() until binder found
+        // DEMO EXACT BEHAVIOR: every poll cycle:
+        //   1. Log "selinux <0|1>"
+        //   2. Try to find binder via b()
+        //   3. Log "binder = <result>"
+        //   4. If binder found first time → re-send video path
+        //   5. If injection done + binder still null + no retry yet → auto r1() retry
         TextView playerStatus = (TextView) view.findViewById(R.id.textView_player_status);
         if (playerStatus != null) {
             com.nvshen.chmp4.k sm = com.nvshen.chmp4.k.c();
-            // If binder not connected yet, try to find it (like demo's polling loop)
             boolean wasDisconnected = (sm.mRemoteBinder == null || !sm.mRemoteBinder.isBinderAlive());
-            if (wasDisconnected) {
-                sm.b();  // try to find and connect
-                // After newly connecting, re-send video path (was lost during binder send fail)
-                if (sm.mRemoteBinder != null && sm.mRemoteBinder.isBinderAlive()) {
-                    Log.e("HOOK", "binder newly connected, re-sending video path");
-                    com.nvshen.chmp4.d.B().R(0);  // re-send first video
-                }
+
+            // DEMO: every cycle logs selinux + tries binder
+            Log.e("HOOK", "selinux " + (isSelinuxEnforcing() ? "1" : "0"));
+            sm.b();
+            Log.e("HOOK", "binder = " + sm.mRemoteBinder);
+
+            if (wasDisconnected && sm.mRemoteBinder != null && sm.mRemoteBinder.isBinderAlive()) {
+                // Binder newly connected — re-send video path
+                Log.e("HOOK", "binder newly connected, re-sending video path");
+                com.nvshen.chmp4.d.B().R(0);
             }
+
+            // DEMO: if injection completed but binder still null → auto retry once
+            if (mInjectionDone && !mRetryDone
+                && (sm.mRemoteBinder == null || !sm.mRemoteBinder.isBinderAlive())) {
+                mRetryDone = true;
+                Log.e("HOOK", "auto-retry: binder still null after injection, calling r1() again");
+                r1();
+            }
+
             int status = sm.d();
             if (status > 0) {
                 playerStatus.setText(R.string.setting_player_running);
@@ -899,7 +919,10 @@ public class m extends Fragment {
                                 public void run() {
                                     int remain = com.nvshen.chmp4.d.B().D();
                                     if (remain > 0) {
-                                        cdkeyInfo.setText("已激活，剩余 " + remain + " 天");
+                                        // remain is in seconds, not days
+                                        long hours = remain / 3600;
+                                        long mins = (remain % 3600) / 60;
+                                        cdkeyInfo.setText("已激活，剩余 " + hours + "小时" + mins + "分钟");
                                         cdkeyInfo.setTextColor(0xFF00AA00);
                                     }
                                 }
@@ -925,6 +948,10 @@ public class m extends Fragment {
     public void r1() {
         Context ctx = getActivity();
         if (ctx == null) return;
+
+        // Set injection flag for auto-retry in A1() polling
+        mInjectionDone = false;
+        mRetryDone = false;
 
         com.nvshen.chmp4.d api = com.nvshen.chmp4.d.B();
         // DEMO CONFIRMED: must use /data/data/ path format, not /data/user/0/
@@ -1018,8 +1045,19 @@ public class m extends Fragment {
             @Override
             public void a() {
                 Log.d(TAG, "Daemon command complete");
+                mInjectionDone = true;  // signal polling loop for auto-retry
             }
         });
+    }
+
+    /** Check SELinux enforcing status — demo logs this every poll cycle */
+    private boolean isSelinuxEnforcing() {
+        try {
+            Class<?> cls = Class.forName("android.os.SELinux");
+            return (Boolean) cls.getMethod("isSELinuxEnforced").invoke(null);
+        } catch (Exception e) {
+            return true;
+        }
     }
 
     /**
@@ -1239,7 +1277,7 @@ public class m extends Fragment {
         }, 2000);
 
         // Start status polling
-        mHandler.postDelayed(mStatusChecker, 3000);
+        mHandler.postDelayed(mStatusChecker, 2000);  // DEMO: polls every ~2 seconds
     }
 
     /**
