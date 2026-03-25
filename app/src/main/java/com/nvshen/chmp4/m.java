@@ -970,11 +970,11 @@ public class m extends Fragment {
 
         // LOGCAT CONFIRMED (A13 demo): environment variables set before initchmp4:
         //   nservice=ABoTx5nBJ policybin=supolicy MYUA=chmp4-...-64 URLINDEX=0
-        // These are set in the persistent root shell before running the script
-        String serviceName = "CHMP4PlayerService";
+        // Daemon inherits these env vars and uses nservice to register binder
+        String serviceName = api.getServiceName();
         String envSetup = String.format(
-            "export nservice=%s; export policybin=supolicy; export URLINDEX=0; ",
-            serviceName);
+            "export nservice=%s; export policybin=supolicy; export URLINDEX=%d; ",
+            serviceName, api.mUrlIndex);
 
         String command = envSetup + String.format(
             "/system/bin/sh %s/chmp4.sh initchmp4 %d %d %s '%s' %s",

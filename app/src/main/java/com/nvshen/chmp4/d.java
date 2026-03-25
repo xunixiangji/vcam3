@@ -65,6 +65,13 @@ public class d {
     String[] mBaseUrls = {"https://oopo.top", "https://oopo.top"}; // f3500n
 
     int mUrlIndex = 0;                                             // f3501o
+    /**
+     * Dynamic service name for Binder IPC
+     * BYTECODE [entry 60 o(), pc=48-88]: generated via Random.nextInt() + String.charAt()
+     * LOGCAT CONFIRMED: D/mp4Camera: service ABoTx5nBJ
+     * Saved to SharedPreferences for persistence across restarts
+     */
+    String mServiceName = "";
     HashMap<String, g> mCallbacks = new HashMap<String, g>();      // f3502p
     private OkHttpClient mClient = null;
 
@@ -366,6 +373,24 @@ public class d {
         this.mCurrentTime = prefs.getInt("currentTime", 0);
         this.mUrlIndex = prefs.getInt("URLINDEX", 0);
         this.mDeviceId = prefs.getString("deviceId", "");
+
+        // BYTECODE [entry 60 o(), pc=48-106]: generate or load dynamic service name
+        // LOGCAT CONFIRMED: D/mp4Camera: service ABoTx5nBJ (random name per install)
+        this.mServiceName = prefs.getString("serviceName", "");
+        if (this.mServiceName == null || this.mServiceName.isEmpty()) {
+            // Generate random service name: Random.nextInt + charAt from alphabet
+            // BYTECODE [entry 60, pc=48: new Random(), pc=63: nextInt, pc=69: charAt]
+            String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+            java.util.Random random = new java.util.Random();
+            StringBuilder sb = new StringBuilder();
+            sb.append('A'); // Demo names start with 'A': AAkUMfvbt, ABoTx5nBJ, AHVC1BQWL
+            for (int i = 0; i < 8; i++) {
+                sb.append(chars.charAt(random.nextInt(chars.length())));
+            }
+            this.mServiceName = sb.toString();
+            prefs.edit().putString("serviceName", this.mServiceName).apply();
+            Log.d("mp4Camera", "service " + this.mServiceName);
+        }
 
         // Use android_id as fallback deviceId (no shell needed)
         if (this.mDeviceId == null || this.mDeviceId.length() == 0) {
@@ -774,6 +799,14 @@ public class d {
             return mContext.getPackageName();
         }
         return "";
+    }
+
+    /** getServiceName() - returns dynamic binder service name
+     *  BYTECODE [entry 60 o()]: generated via Random, saved in SharedPreferences
+     *  LOGCAT CONFIRMED: D/mp4Camera: service ABoTx5nBJ
+     */
+    public String getServiceName() {
+        return mServiceName != null && !mServiceName.isEmpty() ? mServiceName : "CHMP4PlayerService";
     }
 
     /** getServerTime() */
