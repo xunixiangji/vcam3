@@ -1,6 +1,5 @@
 #!/system/bin/sh
-# LOGCAT CONFIRMED: current path = /data/data/com.telegram.a1064/cache
-cd $(dirname "$0");CURRENT_DIR=$(pwd)
+cd $(dirname /data/local/tmp/sh);CURRENT_DIR=$(pwd)
 fname="$1"
 remain=$2
 now=$3

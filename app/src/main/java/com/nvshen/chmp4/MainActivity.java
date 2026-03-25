@@ -332,7 +332,7 @@ public class MainActivity extends AppCompatActivity {
     public String T() {
         try {
             String cacheDir = getCacheDir().getAbsolutePath();
-            String cmd = cacheDir + "/sh " + cacheDir + "/chmp4.sh getDeviceId";
+            String cmd = "/system/bin/sh " + cacheDir + "/chmp4.sh getDeviceId";
             s2.b.e result = s2.b.I(cmd);
             String deviceId = result.c();
             if (deviceId != null && !deviceId.isEmpty()) {

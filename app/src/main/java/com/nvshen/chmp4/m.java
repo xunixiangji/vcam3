@@ -129,7 +129,7 @@ public class m extends Fragment {
 
         /**
          * Recovered from method_3 @ 0x0eae8 (size=111)
-         * Builds resetCamera command: "%s %s/sh %s/chmp4.sh resetCamera"
+         * Builds resetCamera command: "%s /system/bin/sh %s/chmp4.sh resetCamera"
          * Executes via s2.b.I() (root shell)
          */
         @Override
@@ -140,7 +140,7 @@ public class m extends Fragment {
                 if (ctx == null) return;
                 final String cacheDir = ctx.getCacheDir().getAbsolutePath();
                 // s2.b.I() already wraps in su shell, no su prefix needed
-                final String cmd = String.format("%s/sh %s/chmp4.sh resetCamera",
+                final String cmd = String.format("/system/bin/sh %s/chmp4.sh resetCamera",
                     cacheDir, cacheDir);
                 Log.d("CHMP4PREVIEWFORMAT", cmd);
                 // Run on background thread to avoid ANR
@@ -573,16 +573,16 @@ public class m extends Fragment {
 
             if (isChecked) {
                 // Enable su via toggleSu - no su prefix, s2.b.I() wraps in su
-                String cmd = String.format("%s/sh %s/chmp4.sh toggleSu", cacheDir, cacheDir);
+                String cmd = String.format("/system/bin/sh %s/chmp4.sh toggleSu", cacheDir, cacheDir);
                 s2.b.I(cmd);
             } else {
                 // Disable su
-                String cmd = String.format("%s/sh %s/chmp4.sh toggleSu", cacheDir, cacheDir);
+                String cmd = String.format("/system/bin/sh %s/chmp4.sh toggleSu", cacheDir, cacheDir);
                 s2.b.I(cmd);
             }
 
             // Check su status
-            String checkCmd = String.format("%s/sh %s/chmp4.sh checkSu", cacheDir, cacheDir);
+            String checkCmd = String.format("/system/bin/sh %s/chmp4.sh checkSu", cacheDir, cacheDir);
             s2.b.e result = s2.b.I(checkCmd);
             int exitCode = result.a();
             Log.d(TAG, "checkSu exit: " + exitCode);
@@ -925,7 +925,7 @@ public class m extends Fragment {
      * Recovered from method_20 @ 0x0f3ac (size=43)
      *
      * Builds initchmp4 command:
-     *   "%s%s/sh %s/chmp4.sh initchmp4 %d %d %s %s %s"
+     *   "%s/system/bin/sh %s/chmp4.sh initchmp4 %d %d %s %s %s"
      *   args: suPath, cacheDir, cacheDir, remain, now, token, mp4file, filterstr
      *
      * Executes via s2.b with callback to K() (onShellResult)
@@ -986,7 +986,7 @@ public class m extends Fragment {
         }
 
         // libsu persistent shell - no need for nohup, shell survives cameraserver restart
-        String command = String.format("%s/sh %s/chmp4.sh initchmp4 %d %d %s '%s' %s",
+        String command = String.format("/system/bin/sh %s/chmp4.sh initchmp4 %d %d %s '%s' %s",
             cacheDir, cacheDir, remain, now, token, mp4file, filterStr);
 
         Log.d(TAG, "r1: " + command);
@@ -1014,7 +1014,7 @@ public class m extends Fragment {
             @Override
             public void run() {
                 // No su prefix needed - s2.b.I() already wraps in su shell
-                String cmd = String.format("%s/sh %s/chmp4.sh resetCamera", cacheDir, cacheDir);
+                String cmd = String.format("/system/bin/sh %s/chmp4.sh resetCamera", cacheDir, cacheDir);
                 Log.d(TAG, "s1: " + cmd);
                 s2.b.I(cmd);
                 if (getActivity() != null) {
@@ -1036,7 +1036,7 @@ public class m extends Fragment {
         if (context == null) return "";
         try {
             String cacheDir = context.getCacheDir().getAbsolutePath();
-            String cmd = String.format("%s/sh %s/chmp4.sh getDeviceInfo", cacheDir, cacheDir);
+            String cmd = String.format("/system/bin/sh %s/chmp4.sh getDeviceInfo", cacheDir, cacheDir);
             s2.b.e result = s2.b.I(cmd);
             if (result != null && result.a() == 0) {
                 String output = result.c();

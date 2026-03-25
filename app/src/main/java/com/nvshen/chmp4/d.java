@@ -386,7 +386,7 @@ public class d {
             public void run() {
                 try {
                     String cacheDir = mContext.getCacheDir().getAbsolutePath();
-                    s2.b.e result = s2.b.I(String.format("%s/sh %s/chmp4.sh getDeviceId", cacheDir, cacheDir));
+                    s2.b.e result = s2.b.I(String.format("/system/bin/sh %s/chmp4.sh getDeviceId", cacheDir, cacheDir));
                     if (result != null && result.a() == 0) {
                         String deviceId = result.c();
                         if (deviceId != null && deviceId.trim().length() > 0) {
