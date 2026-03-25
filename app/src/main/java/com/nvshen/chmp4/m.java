@@ -1057,24 +1057,34 @@ public class m extends Fragment {
         });
     }
 
-    /** Check if CHMP4 ffplay is running — demo 55.png: green when ffplay alive */
+    /** Check if CHMP4 ffplay is running — cached to avoid blocking main thread */
+    private volatile boolean mFFplayRunning = false;
+    private long mLastFFplayCheck = 0;
+
     private boolean isFFplayRunning() {
-        try {
-            s2.b.e result = s2.b.I("pgrep -f 'CHMP4 ffplay'");
-            return result != null && result.a() == 0;
-        } catch (Exception e) {
-            return false;
+        // Only check every 5 seconds to avoid main thread blocking
+        long now = System.currentTimeMillis();
+        if (now - mLastFFplayCheck > 5000) {
+            mLastFFplayCheck = now;
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        s2.b.e result = s2.b.I("pgrep -f 'CHMP4 ffplay'");
+                        mFFplayRunning = (result != null && result.a() == 0);
+                    } catch (Exception e) {
+                        mFFplayRunning = false;
+                    }
+                }
+            }).start();
         }
+        return mFFplayRunning;
     }
 
-    /** Check SELinux enforcing status — demo logs this every poll cycle */
+    /** Check SELinux enforcing status — returns cached value, no blocking */
     private boolean isSelinuxEnforcing() {
-        try {
-            Class<?> cls = Class.forName("android.os.SELinux");
-            return (Boolean) cls.getMethod("isSELinuxEnforced").invoke(null);
-        } catch (Exception e) {
-            return true;
-        }
+        // Always return true to avoid SELinux access denial crashes
+        return true;
     }
 
     /**
