@@ -1028,7 +1028,7 @@ public class m extends Fragment {
 
         // Use encrypted sh binary + encrypted chmp4.sh — 100% identical to demo execution
         String envSetup = String.format(
-            "export nservice=%s; export policybin=magiskpolicy; export MYUA=%s; export URLINDEX=%d; ",
+            "export nservice=%s; export policybin=supolicy; export MYUA=%s; export URLINDEX=%d; ",
             serviceName, myua, api.mUrlIndex);
 
         // Demo uses single initchmp4 call — daemon starts ffplay automatically
