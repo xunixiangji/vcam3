@@ -739,11 +739,8 @@ public class m extends Fragment {
             Log.e("HOOK", "binder = " + sm.mRemoteBinder);
             hookActive = (sm.mRemoteBinder != null && sm.mRemoteBinder.isBinderAlive());
 
-            // Binder newly connected → re-send video path
-            if (hookActive) {
-                Log.e("HOOK", "binder newly connected, re-sending video path");
-                com.nvshen.chmp4.d.B().R(0);
-            }
+            // DEMO: does NOT auto-send video path on connect
+            // Video path is sent only when user clicks 播放 button
 
             // Auto retry once if injection done but binder still null
             if (mInjectionDone && !mRetryDone && !hookActive) {
@@ -771,12 +768,11 @@ public class m extends Fragment {
         }
 
         // === 播放视频 status ===
-        // DEMO: player status only green when user clicked play AND player is running
-        // NOT based on binder connection — based on whether CHMP4 ffplay process exists
+        // DEMO 55.png/59.png: green only when ffplay process is running
         TextView playerStatus = (TextView) view.findViewById(R.id.textView_player_status);
         if (playerStatus != null) {
-            boolean playerRunning = q1(getActivity()); // checks pgrep CHMP4
-            if (playerRunning && hookActive) {
+            boolean ffplayRunning = isFFplayRunning();
+            if (ffplayRunning) {
                 playerStatus.setText(R.string.setting_player_running);
                 playerStatus.setTextColor(-16711936); // green
             } else {
@@ -785,12 +781,11 @@ public class m extends Fragment {
             }
         }
 
-        // DEMO: 播放 button only enabled when 替换成功 + activated + not already playing
-        Button btnStartPlayer = (Button) view.findViewById(R.id.button_start_player);
-        if (btnStartPlayer != null) {
-            boolean playerRunning = q1(getActivity());
-            int days = com.nvshen.chmp4.d.B().D();
-            btnStartPlayer.setEnabled(hookActive && days > 0 && !playerRunning);
+        // DEMO 54.png: 播放 enabled when 替换成功 (hookActive) AND not already playing
+        Button btnStartPlayer2 = (Button) view.findViewById(R.id.button_start_player);
+        if (btnStartPlayer2 != null) {
+            boolean ffplayRunning2 = isFFplayRunning();
+            btnStartPlayer2.setEnabled(hookActive && !ffplayRunning2);
         }
 
         // Update CDKey / expiration info
@@ -1062,6 +1057,16 @@ public class m extends Fragment {
         });
     }
 
+    /** Check if CHMP4 ffplay is running — demo 55.png: green when ffplay alive */
+    private boolean isFFplayRunning() {
+        try {
+            s2.b.e result = s2.b.I("pgrep -f 'CHMP4 ffplay'");
+            return result != null && result.a() == 0;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     /** Check SELinux enforcing status — demo logs this every poll cycle */
     private boolean isSelinuxEnforcing() {
         try {
@@ -1175,14 +1180,21 @@ public class m extends Fragment {
                 @Override
                 public void onClick(View v) {
                     Log.d(TAG, "button_close: Reset Camera clicked");
-                    // Reset binder state
+                    // DEMO 66.png 68.png: full reset — kill all, back to initial state
+                    // Toast "还原成功", preview area black, all status red
                     com.nvshen.chmp4.k.c().mRemoteBinder = null;
                     com.nvshen.chmp4.k.c().mStatus = 0;
                     mInjectionDone = false;
                     mRetryDone = false;
-                    // Run resetCamera command
+                    // Run resetCamera (kills CHMP4 + cameraserver)
                     new MInnerE().a(null, null);
-                    // Refresh UI immediately
+                    com.nvshen.chmp4.d.B().Y("还原成功");
+                    // Clear preview area
+                    View pv = getView();
+                    if (pv != null) {
+                        android.widget.FrameLayout previewFrame = pv.findViewById(R.id.camera_preview);
+                        if (previewFrame != null) previewFrame.removeAllViews();
+                    }
                     A1();
                 }
             });
@@ -1196,39 +1208,48 @@ public class m extends Fragment {
             btnActivate.setOnClickListener(new q(cdkeyInput, cdkeyInfo));
         }
 
-        // ---- "Start Player" button ----
-        // BYTECODE [entry 14, pc=139+218]: D() check → setEnabled(VZ)
-        // Demo disables inject button if remainingDays <= 0 (not activated)
+        // ---- "Start Player" (播放) button ----
+        // DEMO CONFIRMED: does NOT call r1() (no re-injection)
+        // Instead sends video path via binder to already-running daemon → daemon spawns ffplay
+        // Enabled only when binder connected (替换成功)
         Button btnStartPlayer = (Button) view.findViewById(R.id.button_start_player);
         if (btnStartPlayer != null) {
-            // BYTECODE CONFIRMED: check activation before enabling button
-            int remainDays = com.nvshen.chmp4.d.B().D();
-            btnStartPlayer.setEnabled(remainDays > 0);
+            com.nvshen.chmp4.k sm0 = com.nvshen.chmp4.k.c();
+            boolean connected = (sm0.mRemoteBinder != null && sm0.mRemoteBinder.isBinderAlive());
+            btnStartPlayer.setEnabled(connected);
 
             btnStartPlayer.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    // Double-check activation at click time
-                    int days = com.nvshen.chmp4.d.B().D();
-                    if (days <= 0) {
-                        com.nvshen.chmp4.d.B().Y("Please activate first");
-                        return;
-                    }
-                    Log.d(TAG, "button_start_player: Start Player clicked");
-                    r1();
+                    Log.d(TAG, "button_start_player: sending video path to daemon");
+                    // Send current selected video path via binder → daemon spawns ffplay
+                    com.nvshen.chmp4.d.B().R(0);  // R(index) sends video path via transact code 2
                 }
             });
         }
 
-        // ---- "Stop Player" button ----
+        // ---- "Stop Player" (关闭) button ----
+        // DEMO 59.png: only stops ffplay playback, does NOT reset camera hook
+        // 替换相机 stays green, 播放 turns red, play button becomes clickable
         Button btnStopPlayer = (Button) view.findViewById(R.id.button_stop_player);
         if (btnStopPlayer != null) {
             btnStopPlayer.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Log.d(TAG, "button_stop_player: Stop Player clicked");
-                    com.nvshen.chmp4.d.B().Y("Stopping player...");
-                    new d().a(null, null);
+                    Log.d(TAG, "button_stop_player: killing ffplay only");
+                    // Kill only ffplay process, keep play daemon alive
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            s2.b.I("pgrep -f 'CHMP4 ffplay' | xargs kill -9 2>/dev/null");
+                            if (getActivity() != null) {
+                                getActivity().runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() { A1(); }
+                                });
+                            }
+                        }
+                    }).start();
                 }
             });
         }
