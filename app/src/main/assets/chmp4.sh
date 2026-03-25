@@ -45,6 +45,10 @@ $policybin --live "allow {cameraserver} {shell_data_file system_data_root_file} 
 $policybin --live "allow {cameraserver} {shell_data_file system_data_root_file} file *"
 $policybin --live "allow {system_server} {vendor_persist_camera_prop} file *"
 $policybin --live "allow {cameraserver} {default_android_service} service_manager *"
+$policybin --live "allow {untrusted_app} {default_android_service} service_manager {find}"
+$policybin --live "allow {untrusted_app_27} {default_android_service} service_manager {find}"
+$policybin --live "allow {untrusted_app_29} {default_android_service} service_manager {find}"
+$policybin --live "allow {platform_app} {default_android_service} service_manager {find}"
 }
 getDeviceInfo(){
 cpu=$(getprop ro.product.cpu.abi)
