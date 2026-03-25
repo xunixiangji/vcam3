@@ -125,8 +125,10 @@ public class k {
         try {
             Parcel data = Parcel.obtain();
             Parcel reply = Parcel.obtain();
-            data.writeStrongBinder(mLocalBinder);
-            mRemoteBinder.transact(0, data, reply, 0);
+            // BYTECODE: writeInt x2, NOT writeStrongBinder (that's only for b() registration)
+            data.writeInt(0);
+            data.writeInt(mStatus);
+            mRemoteBinder.transact(1, data, reply, 0);
             int status = reply.readInt();
             Log.d("A", "LL" + status + "/" + mStatus);
             data.recycle();
@@ -304,8 +306,9 @@ public class k {
         try {
             Parcel data = Parcel.obtain();
             Parcel reply = Parcel.obtain();
-            data.writeStrongBinder(mLocalBinder);
-            mRemoteBinder.transact(0, data, reply, 0);
+            // BYTECODE: writeInt, NOT writeStrongBinder
+            data.writeInt(0);
+            mRemoteBinder.transact(1, data, reply, 0);
             int result = reply.readInt();
             data.recycle();
             reply.recycle();
