@@ -282,9 +282,18 @@ public class d {
         return prefs.getInt("remainingDays", mRemainingDays);
     }
 
-    /** getUserAgent() -> custom user agent string */
+    /** getUserAgent() -> must match MYUA format used by CHMP4 daemon
+     *  DEMO CONFIRMED: daemon sends MYUA as User-Agent to bbxi.top/camera/refresh
+     *  Server caches session by UA. If app activation uses different UA than daemon,
+     *  server returns "缓存已过期" and daemon won't start ffplay.
+     *  Format: chmp4-<deviceId>-<packageName>.<version>-<arch>
+     */
     public String E() {
-        return "VCam/" + G() + " Android/" + Build.VERSION.RELEASE;
+        String deviceId = s();
+        String packageName = mContext != null ? mContext.getPackageName() : "com.telegram.a1064";
+        String version = G();
+        String arch = android.os.Build.SUPPORTED_ABIS[0].contains("64") ? "64" : "32";
+        return "chmp4-" + deviceId + "-" + packageName + "." + version + "-" + arch;
     }
 
     /** getToken() */
