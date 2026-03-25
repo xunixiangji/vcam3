@@ -768,11 +768,12 @@ public class m extends Fragment {
         }
 
         // === 播放视频 status ===
-        // DEMO 55.png/59.png: green only when ffplay process is running
+        // Demo uses binder d() return value to check player state
+        // d() logs "LL<status>/<mStatus>" — status > 0 means player running
         TextView playerStatus = (TextView) view.findViewById(R.id.textView_player_status);
         if (playerStatus != null) {
-            boolean ffplayRunning = isFFplayRunning();
-            if (ffplayRunning) {
+            int playerState = hookActive ? sm.d() : 0;
+            if (playerState > 0) {
                 playerStatus.setText(R.string.setting_player_running);
                 playerStatus.setTextColor(-16711936); // green
             } else {
@@ -781,11 +782,11 @@ public class m extends Fragment {
             }
         }
 
-        // DEMO 54.png: 播放 enabled when 替换成功 (hookActive) AND not already playing
+        // DEMO 54.png: 播放 enabled when 替换成功 AND player not running
         Button btnStartPlayer2 = (Button) view.findViewById(R.id.button_start_player);
         if (btnStartPlayer2 != null) {
-            boolean ffplayRunning2 = isFFplayRunning();
-            btnStartPlayer2.setEnabled(hookActive && !ffplayRunning2);
+            int ps = hookActive ? sm.d() : 0;
+            btnStartPlayer2.setEnabled(hookActive && ps <= 0);
         }
 
         // Update CDKey / expiration info
@@ -1057,34 +1058,9 @@ public class m extends Fragment {
         });
     }
 
-    /** Check if CHMP4 ffplay is running — cached to avoid blocking main thread */
-    private volatile boolean mFFplayRunning = false;
-    private long mLastFFplayCheck = 0;
-
-    private boolean isFFplayRunning() {
-        // Only check every 5 seconds to avoid main thread blocking
-        long now = System.currentTimeMillis();
-        if (now - mLastFFplayCheck > 5000) {
-            mLastFFplayCheck = now;
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        s2.b.e result = s2.b.I("pgrep -f 'CHMP4 ffplay'");
-                        mFFplayRunning = (result != null && result.a() == 0);
-                    } catch (Exception e) {
-                        mFFplayRunning = false;
-                    }
-                }
-            }).start();
-        }
-        return mFFplayRunning;
-    }
-
-    /** Check SELinux enforcing status — returns cached value, no blocking */
+    /** Check SELinux enforcing status — demo logs this every poll cycle */
     private boolean isSelinuxEnforcing() {
-        // Always return true to avoid SELinux access denial crashes
-        return true;
+        return true; // safe default, avoid SELinux access denial
     }
 
     /**
