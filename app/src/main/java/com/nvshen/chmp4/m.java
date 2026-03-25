@@ -737,11 +737,14 @@ public class m extends Fragment {
             }
         }
 
-        // Update player status
+        // Update player status — DEMO CONFIRMED: polls b() until binder found
         TextView playerStatus = (TextView) view.findViewById(R.id.textView_player_status);
         if (playerStatus != null) {
-            // Check daemon connection via ServiceManager
             com.nvshen.chmp4.k sm = com.nvshen.chmp4.k.c();
+            // If binder not connected yet, try to find it (like demo's polling loop)
+            if (sm.mRemoteBinder == null || !sm.mRemoteBinder.isBinderAlive()) {
+                sm.b();  // try to find and connect
+            }
             int status = sm.d();
             if (status > 0) {
                 playerStatus.setText(R.string.setting_player_running);

@@ -31,7 +31,7 @@ public class k {
     // Fallback to CHMP4PlayerService if not available
 
     private static k sInstance;           // f3528d
-    private IBinder mRemoteBinder;        // f3529a
+    IBinder mRemoteBinder;                // f3529a (package-private for polling access)
     private int mStatus = 0;             // f3530b
     i mLocalBinder = new i();            // f3531c - creates BinderService on init
 
