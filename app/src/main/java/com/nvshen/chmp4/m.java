@@ -1004,12 +1004,10 @@ public class m extends Fragment {
             "export nservice=%s; export policybin=magiskpolicy; export MYUA=%s; export URLINDEX=%d; ",
             serviceName, myua, api.mUrlIndex);
 
-        // DEMO CONFIRMED: needs two injections — first hooks, second activates
-        // Combine both in one shell command to avoid ANR from separate calls
-        String initCmd = String.format(
+        // Demo uses single initchmp4 call — daemon starts ffplay automatically
+        String command = selinuxCmd + envSetup + String.format(
             "%s/sh %s/chmp4.sh initchmp4 %d %d %s '%s' %s",
             cacheDir, cacheDir, remain, now, token, mp4file, filterStr);
-        String command = selinuxCmd + envSetup + initCmd + "; " + initCmd;
 
         // DEMO CONFIRMED: logs env vars with HOOK tag
         Log.d("HOOK", envSetup);
