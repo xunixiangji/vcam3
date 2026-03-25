@@ -233,8 +233,42 @@ public class MainActivity extends AppCompatActivity {
         String version = com.nvshen.chmp4.d.B().G();
         this.mVersionString = version;
         Log.d("CHMP4", "Current version: " + version);
-        // Check update from server
-        com.nvshen.chmp4.d.B().b0(new com.nvshen.chmp4.f(this, version));
+
+        // DEMO 24.png: show "正在连接服务器" ProgressDialog during startup check
+        final android.app.ProgressDialog pd = new android.app.ProgressDialog(this);
+        pd.setMessage(getString(com.telegram.a1064.R.string.net_test_loading));
+        pd.setCancelable(false);
+        pd.show();
+
+        final MainActivity self = this;
+        com.nvshen.chmp4.d.B().b0(new com.nvshen.chmp4.d.e() {
+            @Override
+            public void a(final int statusCode, final String body) {
+                self.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try { pd.dismiss(); } catch (Exception e) {}
+                        if (statusCode == 200) {
+                            // Connection success — proceed normally
+                            self.U(version, statusCode, body);
+                        } else {
+                            // DEMO 23.png: show "连接服务器失败" dialog with retry
+                            new android.app.AlertDialog.Builder(self)
+                                .setTitle(com.telegram.a1064.R.string.net_error_title)
+                                .setMessage(statusCode + "")
+                                .setPositiveButton("重试", new android.content.DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(android.content.DialogInterface dialog, int which) {
+                                        R();  // retry
+                                    }
+                                })
+                                .setCancelable(false)
+                                .show();
+                        }
+                    }
+                });
+            }
+        });
     }
 
     /**
