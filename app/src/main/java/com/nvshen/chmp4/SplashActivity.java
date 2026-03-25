@@ -291,7 +291,11 @@ public class SplashActivity extends AppCompatActivity {
         Context ctx = getApplicationContext();
         String dir = isos64bit() ? "bin64" : "bin";
         String suffix = isos64bit() ? "-1364" : "-1032";
+        // DEMO CONFIRMED: CHMP4 binary uses argv[0] path to locate resources.
+        // getCacheDir() returns /data/user/0/... but demo uses /data/data/...
+        // Must use /data/data/ format for CHMP4 to work correctly.
         String cacheDir = ctx.getCacheDir().getAbsolutePath();
+        cacheDir = cacheDir.replace("/data/user/0/", "/data/data/");
 
         // Delete old files first (may have wrong ownership from previous install)
         s2.b.I("rm -f " + cacheDir + "/CHMP4 " + cacheDir + "/libCHMP4.so " +

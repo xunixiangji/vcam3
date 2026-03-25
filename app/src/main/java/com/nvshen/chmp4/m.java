@@ -921,7 +921,8 @@ public class m extends Fragment {
         if (ctx == null) return;
 
         com.nvshen.chmp4.d api = com.nvshen.chmp4.d.B();
-        String cacheDir = ctx.getCacheDir().getAbsolutePath();
+        // DEMO CONFIRMED: must use /data/data/ path format, not /data/user/0/
+        String cacheDir = ctx.getCacheDir().getAbsolutePath().replace("/data/user/0/", "/data/data/");
 
         // Get current settings
         int remain = api.D(); // remainingDays
