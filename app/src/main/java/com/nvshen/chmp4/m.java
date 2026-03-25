@@ -743,11 +743,8 @@ public class m extends Fragment {
             // Video path is sent only when user clicks 播放 button
 
             // Auto retry once if injection done but binder still null
-            if (mInjectionDone && !mRetryDone && !hookActive) {
-                mRetryDone = true;
-                Log.e("HOOK", "auto-retry: calling r1() again");
-                r1();
-            }
+            // No auto-retry — it kills the daemon before it can register binder
+            // Demo's single injection + polling is enough
         }
 
         TextView replaceStatus = (TextView) view.findViewById(R.id.textView_camera_replace_status);
