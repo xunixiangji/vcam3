@@ -7,74 +7,56 @@ import android.os.RemoteException;
 import android.util.Log;
 
 /**
- * BinderService (class i) - FULLY RESTORED FROM nmmp BYTECODE
- * Custom Binder for IPC between app and injected camera daemon.
+ * BinderService (class i) - LOCAL Binder for daemon IPC
  *
- * This is the LOCAL binder that the app registers with the daemon.
- * The daemon calls onTransact on this binder to communicate back to the app.
+ * LOGCAT CONFIRMED (A12 + A13 demo):
+ *   Tag = "CHMP4PlayerService" (NOT "CHMP4")
+ *   code=0: daemon sends {writeInt(0), writeString("hello world")}
+ *     Log: "MyCbBinder11 onTransact 0"
+ *     Log: "MyCbBinder11 0,s:hello world"
+ *     Log: "regCb 0"
+ *   code=1: daemon sends camera size info
+ *     Log: "MyCbBinder11 onTransact 1"
+ *     Log: "size:640x480"
  *
- * Transaction protocol (from binder_service.cpp - daemon side sends these to us):
- *   code 0: Daemon sends "hello world" test message after registering
- *           data: writeInt(0), writeString("hello world")
- *           -> We read the message and update status
- *   code 1: Daemon sends status/result message (e.g. "success" from test_setSwapJpegWH)
- *           data: writeInt(0), writeString(message)
- *           -> We display the message via ApiManager.Y()
- *   code 2: Daemon requests getFrame
- *           data: writeInt(frame_param)
- *           -> We handle frame request
- *
- * Recovery notes:
- *   method_2 @ 0x00a8ec (157 u16 words) - onTransact
- *   Bytecode shows:
- *   - Gets orientation, computes (orientation + 1) % 3
- *   - Builds StringBuilder with status info
- *   - Reads int from Parcel, checks transaction code
- *   - For code 0: reads int + string, updates Spinner UI element
- *   - For code 1: reads string, logs/displays it
- *   - Uses "CHMP4PREVIEWFORMAT" log tag
- *   - References R.id.0x7f090109 (spinner), R.id.0x7f100036, R.id.0x7f100038
+ * BYTECODE [entry 2, 157 u16]: after code=0 reads data, calls
+ *   ApiManager.B() → D() → V() → Y() for UI update
  */
 class i extends Binder {
 
-    private static final String TAG = "CHMP4";
+    // LOGCAT CONFIRMED: demo uses "CHMP4PlayerService" as log tag
+    private static final String TAG = "CHMP4PlayerService";
 
     i() {}
 
-    /**
-     * onTransact - handles Binder IPC transactions from the daemon
-     *
-     * Recovered from method_2 bytecode analysis:
-     * - code 0: Daemon registration confirmation + orientation sync
-     *   Reads: int (status), string (message like "hello world")
-     *   Writes current video index to spinner, logs connection info
-     *
-     * - code 1: Daemon status/result notification
-     *   Reads: int (status), string (result message e.g. "success")
-     *   Displays result via ApiManager toast
-     *
-     * - default: Delegates to super.onTransact
-     */
     @Override
     protected boolean onTransact(int code, Parcel data, Parcel reply, int flags)
             throws RemoteException {
+        // LOGCAT CONFIRMED format: "MyCbBinder11 onTransact N"
         Log.e(TAG, "MyCbBinder11 onTransact " + code);
         try {
             switch (code) {
                 case 0: {
-                    // Daemon registration confirmation
-                    // From bytecode: reads int, then string
-                    // Updates spinner position (video index)
+                    // LOGCAT CONFIRMED: daemon sends writeInt(0) + writeString("hello world")
                     int status = data.readInt();
                     String message = data.readString();
-                    Log.e(TAG, "MyCbBinder11 " + "D" + status + ",s:" + message);
 
-                    // Update UI: set spinner to current video index
+                    // LOGCAT CONFIRMED format: "MyCbBinder11 0,s:hello world"
+                    Log.e(TAG, "MyCbBinder11 " + status + ",s:" + message);
+
+                    // BYTECODE [entry 2]: after reading data, calls ApiManager methods
                     com.nvshen.chmp4.d api = com.nvshen.chmp4.d.B();
-                    if (api != null && api.r() != null) {
-                        // Daemon connected successfully
-                        Log.e("CHMP4PREVIEWFORMAT", "connected, status=" + status);
+                    if (api != null) {
+                        // BYTECODE pc=37: V(statusStr) — sets base URL if contains "://"
+                        api.V("" + status + message);
+                        // BYTECODE pc=99: Y(message) — Toast display
+                        if (message != null) {
+                            api.Y(message);
+                        }
                     }
+
+                    // LOGCAT CONFIRMED: "regCb 0" logged after processing code=0
+                    Log.e(TAG, "regCb " + status);
 
                     if (reply != null) {
                         reply.writeInt(0);
@@ -83,28 +65,10 @@ class i extends Binder {
                 }
 
                 case 1: {
-                    // Status/result notification from daemon
-                    // From bytecode: reads int + string, shows result
-                    int resultCode = data.readInt();
-                    String resultMessage = data.readString();
-                    Log.e(TAG, "MyCbBinder11 " + "CI" + "," + resultCode + ",s:" + resultMessage);
-
-                    // Display result via ApiManager
-                    com.nvshen.chmp4.d api = com.nvshen.chmp4.d.B();
-                    if (api != null && resultMessage != null) {
-                        Log.e("CHMP4PREVIEWFORMAT", "result: " + resultMessage);
-                    }
-
-                    if (reply != null) {
-                        reply.writeInt(0);
-                    }
-                    return true;
-                }
-
-                case 2: {
-                    // Frame request from daemon
-                    int frameParam = data.readInt();
-                    Log.e(TAG, "MyCbBinder11 getFrame " + frameParam);
+                    // LOGCAT CONFIRMED: code=1 sends camera size info
+                    // Demo log: "size:640x480" or "size:4624x3472"
+                    String sizeInfo = data.readString();
+                    Log.e(TAG, sizeInfo != null ? sizeInfo : "");
 
                     if (reply != null) {
                         reply.writeInt(0);
