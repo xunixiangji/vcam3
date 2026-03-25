@@ -32,7 +32,7 @@ public class k {
 
     private static k sInstance;           // f3528d
     IBinder mRemoteBinder;                // f3529a (package-private for polling access)
-    private int mStatus = 0;             // f3530b
+    int mStatus = 0;                     // f3530b (package-private for reset access)
     i mLocalBinder = new i();            // f3531c - creates BinderService on init
 
     // ===== getInstance() - returns singleton ServiceManager =====

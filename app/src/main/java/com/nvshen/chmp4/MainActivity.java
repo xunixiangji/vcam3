@@ -409,9 +409,9 @@ public class MainActivity extends AppCompatActivity {
             });
         }
 
-        // Switch to default tab (设置 = 2)
-        O(2);
-        if (bottomNav != null) bottomNav.setSelectedItemId(R.id.nav_settings);
+        // DEMO: default tab is 说明 (info/WebView = 0), not settings
+        O(0);
+        if (bottomNav != null) bottomNav.setSelectedItemId(R.id.nav_info);
 
         // Start update check
         R();

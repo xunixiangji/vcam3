@@ -144,8 +144,8 @@ public class m extends Fragment {
                 if (ctx == null) return;
                 final String cacheDir = ctx.getCacheDir().getAbsolutePath();
                 // s2.b.I() already wraps in su shell, no su prefix needed
-                final String cmd = String.format("/system/bin/sh %s/chmp4.sh resetCamera",
-                    cacheDir, cacheDir);
+                final String cdir = cacheDir.replace("/data/user/0/", "/data/data/");
+                final String cmd = String.format("%s/sh %s/chmp4.sh resetCamera", cdir, cdir);
                 Log.d("CHMP4PREVIEWFORMAT", cmd);
                 // Run on background thread to avoid ANR
                 new Thread(new Runnable() {
@@ -728,12 +728,33 @@ public class m extends Fragment {
         View view = getView();
         if (view == null) return;
 
-        // Update camera replace status — check if hook is loaded in cameraserver
-        // Demo: turns green when hook is active, not when initchmp4 process is running
+        // === 替换相机 status ===
+        com.nvshen.chmp4.k sm = com.nvshen.chmp4.k.c();
+        boolean hookActive = (sm.mRemoteBinder != null && sm.mRemoteBinder.isBinderAlive());
+
+        // Binder polling: only when not connected
+        if (!hookActive) {
+            Log.e("HOOK", "selinux " + (isSelinuxEnforcing() ? "1" : "0"));
+            sm.b();
+            Log.e("HOOK", "binder = " + sm.mRemoteBinder);
+            hookActive = (sm.mRemoteBinder != null && sm.mRemoteBinder.isBinderAlive());
+
+            // Binder newly connected → re-send video path
+            if (hookActive) {
+                Log.e("HOOK", "binder newly connected, re-sending video path");
+                com.nvshen.chmp4.d.B().R(0);
+            }
+
+            // Auto retry once if injection done but binder still null
+            if (mInjectionDone && !mRetryDone && !hookActive) {
+                mRetryDone = true;
+                Log.e("HOOK", "auto-retry: calling r1() again");
+                r1();
+            }
+        }
+
         TextView replaceStatus = (TextView) view.findViewById(R.id.textView_camera_replace_status);
         if (replaceStatus != null) {
-            com.nvshen.chmp4.k sm = com.nvshen.chmp4.k.c();
-            boolean hookActive = (sm.mRemoteBinder != null && sm.mRemoteBinder.isBinderAlive());
             if (hookActive) {
                 replaceStatus.setText(R.string.setting_replace_success);
                 replaceStatus.setTextColor(-16711936); // green
@@ -743,40 +764,19 @@ public class m extends Fragment {
             }
         }
 
-        // DEMO EXACT BEHAVIOR: every poll cycle:
-        //   1. Log "selinux <0|1>"
-        //   2. Try to find binder via b()
-        //   3. Log "binder = <result>"
-        //   4. If binder found first time → re-send video path
-        //   5. If injection done + binder still null + no retry yet → auto r1() retry
+        // DEMO: 替换相机 button disabled when already succeeded
+        Button btnSettings = (Button) view.findViewById(R.id.button_settings);
+        if (btnSettings != null) {
+            btnSettings.setEnabled(!hookActive);
+        }
+
+        // === 播放视频 status ===
+        // DEMO: player status only green when user clicked play AND player is running
+        // NOT based on binder connection — based on whether CHMP4 ffplay process exists
         TextView playerStatus = (TextView) view.findViewById(R.id.textView_player_status);
         if (playerStatus != null) {
-            com.nvshen.chmp4.k sm = com.nvshen.chmp4.k.c();
-            boolean wasDisconnected = (sm.mRemoteBinder == null || !sm.mRemoteBinder.isBinderAlive());
-
-            // DEMO: only try b() when binder not connected. Once connected, stop polling.
-            if (wasDisconnected) {
-                Log.e("HOOK", "selinux " + (isSelinuxEnforcing() ? "1" : "0"));
-                sm.b();
-                Log.e("HOOK", "binder = " + sm.mRemoteBinder);
-            }
-
-            if (wasDisconnected && sm.mRemoteBinder != null && sm.mRemoteBinder.isBinderAlive()) {
-                // Binder newly connected — re-send video path
-                Log.e("HOOK", "binder newly connected, re-sending video path");
-                com.nvshen.chmp4.d.B().R(0);
-            }
-
-            // DEMO: if injection completed but binder still null → auto retry once
-            if (mInjectionDone && !mRetryDone
-                && (sm.mRemoteBinder == null || !sm.mRemoteBinder.isBinderAlive())) {
-                mRetryDone = true;
-                Log.e("HOOK", "auto-retry: binder still null after injection, calling r1() again");
-                r1();
-            }
-
-            int status = sm.d();
-            if (status > 0) {
+            boolean playerRunning = q1(getActivity()); // checks pgrep CHMP4
+            if (playerRunning && hookActive) {
                 playerStatus.setText(R.string.setting_player_running);
                 playerStatus.setTextColor(-16711936); // green
             } else {
@@ -785,13 +785,12 @@ public class m extends Fragment {
             }
         }
 
-        // DEMO: 播放 button only enabled when 替换相机 succeeded (binder connected)
+        // DEMO: 播放 button only enabled when 替换成功 + activated + not already playing
         Button btnStartPlayer = (Button) view.findViewById(R.id.button_start_player);
         if (btnStartPlayer != null) {
-            com.nvshen.chmp4.k sm2 = com.nvshen.chmp4.k.c();
-            boolean hookActive = (sm2.mRemoteBinder != null && sm2.mRemoteBinder.isBinderAlive());
+            boolean playerRunning = q1(getActivity());
             int days = com.nvshen.chmp4.d.B().D();
-            btnStartPlayer.setEnabled(hookActive && days > 0);
+            btnStartPlayer.setEnabled(hookActive && days > 0 && !playerRunning);
         }
 
         // Update CDKey / expiration info
@@ -1087,7 +1086,9 @@ public class m extends Fragment {
             @Override
             public void run() {
                 // No su prefix needed - s2.b.I() already wraps in su shell
-                String cmd = String.format("/system/bin/sh %s/chmp4.sh resetCamera", cacheDir);
+                // Use encrypted sh like demo does
+                String cdir = cacheDir.replace("/data/user/0/", "/data/data/");
+                String cmd = String.format("%s/sh %s/chmp4.sh resetCamera", cdir, cdir);
                 Log.d(TAG, "s1: " + cmd);
                 s2.b.I(cmd);
                 if (getActivity() != null) {
@@ -1166,15 +1167,23 @@ public class m extends Fragment {
             });
         }
 
-        // ---- "Reset Camera" (stop) button ----
+        // ---- "Reset Camera" (还原相机) button ----
+        // DEMO: resets everything — kills daemon, clears binder, all status back to red
         Button btnClose = (Button) view.findViewById(R.id.button_close);
         if (btnClose != null) {
             btnClose.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     Log.d(TAG, "button_close: Reset Camera clicked");
-                    com.nvshen.chmp4.d.B().Y("Resetting camera...");
+                    // Reset binder state
+                    com.nvshen.chmp4.k.c().mRemoteBinder = null;
+                    com.nvshen.chmp4.k.c().mStatus = 0;
+                    mInjectionDone = false;
+                    mRetryDone = false;
+                    // Run resetCamera command
                     new MInnerE().a(null, null);
+                    // Refresh UI immediately
+                    A1();
                 }
             });
         }
