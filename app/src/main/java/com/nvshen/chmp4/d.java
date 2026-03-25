@@ -436,20 +436,26 @@ public class d {
         }
     }
 
-    /** loadDeviceIdFromShell() - called AFTER SplashActivity copies shell files */
+    /** loadDeviceIdFromShell() - gets android_id from ROOT shell context
+     *  CRITICAL: Java's ANDROID_ID is per-app per-signing-key on Android 8+.
+     *  Root shell returns a DIFFERENT value than our app process.
+     *  CHMP4 daemon uses the ROOT shell value, so activation must match.
+     *  Demo deviceId: c8d91e09d328631a (root shell)
+     *  Our Java ANDROID_ID: bbf304014ac578bd (different signing key)
+     */
     public void loadDeviceIdFromShell() {
         if (mContext == null) return;
         new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    String cacheDir = mContext.getCacheDir().getAbsolutePath();
-                    s2.b.e result = s2.b.I(String.format("/system/bin/sh %s/chmp4.sh getDeviceId", cacheDir));
+                    // Get android_id directly from root shell — must match daemon's getDeviceId()
+                    s2.b.e result = s2.b.I("settings get secure android_id");
                     if (result != null && result.a() == 0) {
                         String deviceId = result.c();
                         if (deviceId != null && deviceId.trim().length() > 0) {
                             mDeviceId = deviceId.trim();
-                            // Save to prefs
+                            Log.e(TAG, "shell deviceId: " + mDeviceId);
                             mContext.getSharedPreferences("CHMP4", Context.MODE_PRIVATE)
                                 .edit().putString("deviceId", mDeviceId).apply();
                         }
