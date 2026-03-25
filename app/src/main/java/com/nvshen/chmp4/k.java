@@ -103,12 +103,29 @@ public class k {
         return mRemoteBinder;
     }
 
-    /** getStatus() -> connection status (0 = not connected, 1 = connected) */
+    /**
+     * getStatus() -> connection status via Binder transact
+     * BYTECODE CONFIRMED [entry 37, 86 u16]:
+     *   Parcel.writeInt x2 + IBinder.transact + Parcel.readInt
+     *   + Log.d("A", "LL" + status + "/" + mStatus)
+     */
     public int d() {
-        if (mRemoteBinder != null && mRemoteBinder.isBinderAlive()) {
-            return mStatus;
+        if (mRemoteBinder == null || !mRemoteBinder.isBinderAlive()) {
+            return 0;
         }
-        return 0;
+        try {
+            Parcel data = Parcel.obtain();
+            Parcel reply = Parcel.obtain();
+            data.writeStrongBinder(mLocalBinder);
+            mRemoteBinder.transact(0, data, reply, 0);
+            int status = reply.readInt();
+            Log.d("A", "LL" + status + "/" + mStatus);
+            data.recycle();
+            reply.recycle();
+            return status;
+        } catch (Exception ex) {
+            return 0;
+        }
     }
 
     /**
@@ -172,26 +189,28 @@ public class k {
 
     /**
      * queryValue(key) -> value string
-     * Sends a query string via binder transaction code 2, sub-command 2 (setFilter)
+     * BYTECODE CONFIRMED [entry 28, 26 u16]:
+     *   Calls c()→getInstance, l()→getStatus, checks threshold(#19),
+     *   calls B()→Parcel, getString(R.string.0x7f100036), Y()→updateStatus
+     *   This is a STATUS DISPLAY method — gets status and shows error string.
      */
     public String h(String key) {
-        if (mRemoteBinder == null || !mRemoteBinder.isBinderAlive()) {
-            return "";
-        }
         try {
-            Parcel data = Parcel.obtain();
-            Parcel reply = Parcel.obtain();
-            data.writeInt(2); // sub-command 2 = setFilter
-            data.writeString(key);
-            mRemoteBinder.transact(2, data, reply, 0);
-            int result = reply.readInt();
-            data.recycle();
-            reply.recycle();
-            return String.valueOf(result);
+            k sm = k.c();
+            int count = sm.l();
+            if (count >= 19) {
+                return "";
+            }
+            com.nvshen.chmp4.d api = com.nvshen.chmp4.d.B();
+            if (api != null && api.r() != null) {
+                // BYTECODE: getString(R.string.0x7f100036) = error_no_replace_camera (from demo public.xml)
+                String statusStr = api.r().getString(com.telegram.a1064.R.string.error_no_replace_camera);
+                api.Y(statusStr);
+            }
         } catch (Exception ex) {
-            Log.e(TAG, "queryValue failed", ex);
-            return "";
+            Log.e(TAG, "h() failed", ex);
         }
+        return "";
     }
 
     /**
@@ -219,17 +238,26 @@ public class k {
 
     /**
      * getTransactionName(code) -> name string
-     * Returns a descriptive name for the given transaction code
+     * BYTECODE CONFIRMED [entry 29, 50 u16]:
+     *   null check + b() + Parcel.writeInt + transact + Parcel.readInt
+     *   + Integer.toString(result)
+     *   NOT a hardcoded switch — queries daemon via Binder transact.
      */
     public String j(int transactionCode) {
-        switch (transactionCode) {
-            case 0: return "registerClient";
-            case 1: return "licenseVerify";
-            case 2: return "subCommand";
-            case 3: return "setSwapJpegWH";
-            case 4: return "toggleCamera";
-            case 5: return "setHeightPadding";
-            default: return "";
+        if (mRemoteBinder == null || !mRemoteBinder.isBinderAlive()) {
+            return "";
+        }
+        try {
+            Parcel data = Parcel.obtain();
+            Parcel reply = Parcel.obtain();
+            data.writeInt(transactionCode);
+            mRemoteBinder.transact(transactionCode, data, reply, 0);
+            int result = reply.readInt();
+            data.recycle();
+            reply.recycle();
+            return String.valueOf(result);
+        } catch (Exception ex) {
+            return "";
         }
     }
 
@@ -255,8 +283,28 @@ public class k {
         }
     }
 
-    /** getConnectionCount() */
+    /**
+     * getConnectionCount() -> int
+     * BYTECODE CONFIRMED [entry 31, 40 u16]:
+     *   null check + b() + Parcel.obtain + writeInt + IBinder.transact
+     *   + Parcel.readInt → return result
+     *   NOT a simple mStatus return — queries via Binder transact.
+     */
     public int l() {
-        return mStatus;
+        if (mRemoteBinder == null || !mRemoteBinder.isBinderAlive()) {
+            return 0;
+        }
+        try {
+            Parcel data = Parcel.obtain();
+            Parcel reply = Parcel.obtain();
+            data.writeStrongBinder(mLocalBinder);
+            mRemoteBinder.transact(0, data, reply, 0);
+            int result = reply.readInt();
+            data.recycle();
+            reply.recycle();
+            return result;
+        } catch (Exception ex) {
+            return 0;
+        }
     }
 }
