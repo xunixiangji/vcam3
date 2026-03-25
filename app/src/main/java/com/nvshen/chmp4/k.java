@@ -189,28 +189,26 @@ public class k {
 
     /**
      * queryValue(key) -> value string
-     * BYTECODE CONFIRMED [entry 28, 26 u16]:
-     *   Calls c()→getInstance, l()→getStatus, checks threshold(#19),
-     *   calls B()→Parcel, getString(R.string.0x7f100036), Y()→updateStatus
-     *   This is a STATUS DISPLAY method — gets status and shows error string.
+     * Sends a query string via binder transaction code 2, sub-command 2 (setFilter)
      */
     public String h(String key) {
-        try {
-            k sm = k.c();
-            int count = sm.l();
-            if (count >= 19) {
-                return "";
-            }
-            com.nvshen.chmp4.d api = com.nvshen.chmp4.d.B();
-            if (api != null && api.r() != null) {
-                // BYTECODE: getString(R.string.0x7f100036) = error_no_replace_camera (from demo public.xml)
-                String statusStr = api.r().getString(com.telegram.a1064.R.string.error_no_replace_camera);
-                api.Y(statusStr);
-            }
-        } catch (Exception ex) {
-            Log.e(TAG, "h() failed", ex);
+        if (mRemoteBinder == null || !mRemoteBinder.isBinderAlive()) {
+            return "";
         }
-        return "";
+        try {
+            Parcel data = Parcel.obtain();
+            Parcel reply = Parcel.obtain();
+            data.writeInt(2); // sub-command 2 = setFilter
+            data.writeString(key);
+            mRemoteBinder.transact(2, data, reply, 0);
+            int result = reply.readInt();
+            data.recycle();
+            reply.recycle();
+            return String.valueOf(result);
+        } catch (Exception ex) {
+            Log.e(TAG, "queryValue failed", ex);
+            return "";
+        }
     }
 
     /**
