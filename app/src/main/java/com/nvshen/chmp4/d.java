@@ -147,8 +147,6 @@ public class d {
      * - On exit code 0: shows success toast, calls ServiceManager.refresh()
      * - On failure: shows error toast with exit code
      */
-    private boolean mAutoRetryDone = false;
-
     public void K(s2.b.e shellResult) {
         a0();  // clearStatus()
         int exitCode = shellResult.a();  // getExitCode()
@@ -167,31 +165,11 @@ public class d {
             }
         }
         if (shellResult.a() == 0) {
-            Log.e("HOOK", "K() exit=0, calling k.c().b() on thread=" + Thread.currentThread().getName());
-            k.c().b();  // ServiceManager.getInstance().refresh()
-            Log.e("HOOK", "K() k.c().b() returned, binder=" + k.c().mRemoteBinder);
-
-            // DEMO CONFIRMED: auto second injection needed to activate camera replacement
-            // Demo always injects twice — first sets up, second activates
-            if (!mAutoRetryDone) {
-                mAutoRetryDone = true;
-                Log.e("HOOK", "K() auto-retry: triggering second injection");
-                // Re-run the same injection command
-                if (mLastInjectCommand != null) {
-                    g(mLastInjectCommand, new g() {
-                        @Override
-                        public void a() {
-                            Log.d("HOOK", "Second injection complete");
-                        }
-                    });
-                }
-            } else {
-                Y(this.mContext.getString(com.telegram.a1064.R.string.replace_camera_success));
-                mAutoRetryDone = false;
-            }
+            Y(this.mContext.getString(com.telegram.a1064.R.string.replace_camera_success));
+            Log.e("HOOK", "K() exit=0, calling k.c().b()");
+            k.c().b();
         } else {
             Y(this.mContext.getString(com.telegram.a1064.R.string.replace_camera_fail) + exitCode);
-            mAutoRetryDone = false;
         }
     }
 
