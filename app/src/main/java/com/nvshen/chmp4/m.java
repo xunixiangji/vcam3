@@ -968,18 +968,26 @@ public class m extends Fragment {
             return;
         }
 
-        // LOGCAT CONFIRMED (A13 demo): environment variables set before initchmp4:
-        //   nservice=ABoTx5nBJ policybin=supolicy MYUA=chmp4-...-64 URLINDEX=0
+        // LOGCAT CONFIRMED (demo): environment variables set before initchmp4:
+        //   nservice=AL3VXEYf5 policybin=supolicy MYUA=chmp4-<deviceId>-<pkg>.<ver>-64 URLINDEX=0
         // Daemon inherits these env vars and uses nservice to register binder
+        // MYUA is critical for server license verification (exit 101 without it)
         String serviceName = api.getServiceName();
+        String deviceId = api.s();  // getDeviceId
+        String packageName = ctx.getPackageName();
+        String version = api.G();   // getVersion
+        String arch = android.os.Build.SUPPORTED_ABIS[0].contains("64") ? "64" : "32";
+        String myua = String.format("chmp4-%s-%s.%s-%s", deviceId, packageName, version, arch);
         String envSetup = String.format(
-            "export nservice=%s; export policybin=supolicy; export URLINDEX=%d; ",
-            serviceName, api.mUrlIndex);
+            "export nservice=%s; export policybin=supolicy; export MYUA=%s; export URLINDEX=%d; ",
+            serviceName, myua, api.mUrlIndex);
 
         String command = envSetup + String.format(
             "/system/bin/sh %s/chmp4.sh initchmp4 %d %d %s '%s' %s",
             cacheDir, remain, now, token, mp4file, filterStr);
 
+        // DEMO CONFIRMED: logs env vars with HOOK tag
+        Log.d("HOOK", envSetup);
         Log.d(TAG, "r1: " + command);
 
         // Execute via root shell with callback
