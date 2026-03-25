@@ -968,8 +968,16 @@ public class m extends Fragment {
             return;
         }
 
-        // libsu persistent shell - no need for nohup, shell survives cameraserver restart
-        String command = String.format("/system/bin/sh %s/chmp4.sh initchmp4 %d %d %s '%s' %s",
+        // LOGCAT CONFIRMED (A13 demo): environment variables set before initchmp4:
+        //   nservice=ABoTx5nBJ policybin=supolicy MYUA=chmp4-...-64 URLINDEX=0
+        // These are set in the persistent root shell before running the script
+        String serviceName = "CHMP4PlayerService";
+        String envSetup = String.format(
+            "export nservice=%s; export policybin=supolicy; export URLINDEX=0; ",
+            serviceName);
+
+        String command = envSetup + String.format(
+            "/system/bin/sh %s/chmp4.sh initchmp4 %d %d %s '%s' %s",
             cacheDir, remain, now, token, mp4file, filterStr);
 
         Log.d(TAG, "r1: " + command);
