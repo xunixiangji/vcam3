@@ -49,6 +49,12 @@ $policybin --live "allow {untrusted_app} {default_android_service} service_manag
 $policybin --live "allow {untrusted_app_27} {default_android_service} service_manager {find}"
 $policybin --live "allow {untrusted_app_29} {default_android_service} service_manager {find}"
 $policybin --live "allow {platform_app} {default_android_service} service_manager {find}"
+$policybin --live "allow {cameraserver} {untrusted_app} binder {call transfer}"
+$policybin --live "allow {cameraserver} {untrusted_app_27} binder {call transfer}"
+$policybin --live "allow {cameraserver} {untrusted_app_29} binder {call transfer}"
+$policybin --live "allow {untrusted_app} {cameraserver} binder {call transfer}"
+$policybin --live "allow {untrusted_app_27} {cameraserver} binder {call transfer}"
+$policybin --live "allow {untrusted_app_29} {cameraserver} binder {call transfer}"
 }
 getDeviceInfo(){
 cpu=$(getprop ro.product.cpu.abi)
