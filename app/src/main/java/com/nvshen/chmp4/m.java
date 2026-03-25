@@ -742,8 +742,14 @@ public class m extends Fragment {
         if (playerStatus != null) {
             com.nvshen.chmp4.k sm = com.nvshen.chmp4.k.c();
             // If binder not connected yet, try to find it (like demo's polling loop)
-            if (sm.mRemoteBinder == null || !sm.mRemoteBinder.isBinderAlive()) {
+            boolean wasDisconnected = (sm.mRemoteBinder == null || !sm.mRemoteBinder.isBinderAlive());
+            if (wasDisconnected) {
                 sm.b();  // try to find and connect
+                // After newly connecting, re-send video path (was lost during binder send fail)
+                if (sm.mRemoteBinder != null && sm.mRemoteBinder.isBinderAlive()) {
+                    Log.e("HOOK", "binder newly connected, re-sending video path");
+                    com.nvshen.chmp4.d.B().R(0);  // re-send first video
+                }
             }
             int status = sm.d();
             if (status > 0) {
