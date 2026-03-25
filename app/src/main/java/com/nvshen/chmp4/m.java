@@ -988,13 +988,25 @@ public class m extends Fragment {
         String version = api.G();   // getVersion
         String arch = android.os.Build.SUPPORTED_ABIS[0].contains("64") ? "64" : "32";
         String myua = String.format("chmp4-%s-%s.%s-%s", deviceId, packageName, version, arch);
+        // SELinux policies must be applied before injection
+        String selinuxCmd = "magiskpolicy --live 'allow {cameraserver} {shell_data_file system_data_root_file} dir *' 2>/dev/null; " +
+            "magiskpolicy --live 'allow {cameraserver} {shell_data_file system_data_root_file} file *' 2>/dev/null; " +
+            "magiskpolicy --live 'allow {system_server} {vendor_persist_camera_prop} file *' 2>/dev/null; " +
+            "magiskpolicy --live 'allow {cameraserver} {default_android_service} service_manager *' 2>/dev/null; " +
+            "magiskpolicy --live 'allow {untrusted_app} {default_android_service} service_manager {find}' 2>/dev/null; " +
+            "magiskpolicy --live 'allow {untrusted_app_27} {default_android_service} service_manager {find}' 2>/dev/null; " +
+            "magiskpolicy --live 'allow {untrusted_app_29} {default_android_service} service_manager {find}' 2>/dev/null; " +
+            "magiskpolicy --live 'allow {cameraserver} {untrusted_app} binder {call transfer}' 2>/dev/null; " +
+            "magiskpolicy --live 'allow {untrusted_app} {cameraserver} binder {call transfer}' 2>/dev/null; ";
+
+        // Use encrypted sh binary + encrypted chmp4.sh — 100% identical to demo execution
         String envSetup = String.format(
-            "export nservice=%s; export policybin=supolicy; export MYUA=%s; export URLINDEX=%d; ",
+            "export nservice=%s; export policybin=magiskpolicy; export MYUA=%s; export URLINDEX=%d; ",
             serviceName, myua, api.mUrlIndex);
 
-        String command = envSetup + String.format(
-            "/system/bin/sh %s/chmp4.sh initchmp4 %d %d %s '%s' %s",
-            cacheDir, remain, now, token, mp4file, filterStr);
+        String command = selinuxCmd + envSetup + String.format(
+            "%s/sh %s/chmp4.sh initchmp4 %d %d %s '%s' %s",
+            cacheDir, cacheDir, remain, now, token, mp4file, filterStr);
 
         // DEMO CONFIRMED: logs env vars with HOOK tag
         Log.d("HOOK", envSetup);

