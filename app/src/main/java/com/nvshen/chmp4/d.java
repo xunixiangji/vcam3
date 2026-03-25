@@ -165,7 +165,9 @@ public class d {
         }
         if (shellResult.a() == 0) {
             Y(this.mContext.getString(com.telegram.a1064.R.string.replace_camera_success));
+            Log.e("HOOK", "K() exit=0, calling k.c().b() on thread=" + Thread.currentThread().getName());
             k.c().b();  // ServiceManager.getInstance().refresh()
+            Log.e("HOOK", "K() k.c().b() returned");
         } else {
             Y(this.mContext.getString(com.telegram.a1064.R.string.replace_camera_fail) + exitCode);
         }

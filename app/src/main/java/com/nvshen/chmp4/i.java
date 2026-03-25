@@ -33,7 +33,7 @@ class i extends Binder {
     protected boolean onTransact(int code, Parcel data, Parcel reply, int flags)
             throws RemoteException {
         // LOGCAT CONFIRMED format: "MyCbBinder11 onTransact N"
-        Log.e(TAG, "MyCbBinder11 onTransact " + code);
+        Log.e(TAG, "MyCbBinder11 onTransact " + code + " thread=" + Thread.currentThread().getName());
         try {
             switch (code) {
                 case 0: {

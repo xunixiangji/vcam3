@@ -56,13 +56,14 @@ public class k {
     private void a() {
         try {
             String serviceName = com.nvshen.chmp4.d.B().getServiceName();
+            Log.e(TAG, "a() registering service: " + serviceName);
             Class<?> sm = Class.forName("android.os.ServiceManager");
             Method addService = sm.getDeclaredMethod("addService", String.class, IBinder.class);
             addService.setAccessible(true);
             addService.invoke(null, serviceName, mLocalBinder);
-            Log.e(TAG, "regCb " + serviceName);
+            Log.e(TAG, "regCb " + serviceName + " OK");
         } catch (Exception ex) {
-            Log.e(TAG, "regCb error:" + ex.getMessage());
+            Log.e(TAG, "regCb error:" + ex.getMessage(), ex);
         }
     }
 
@@ -83,22 +84,29 @@ public class k {
 
             mRemoteBinder = (IBinder) getService.invoke(null, serviceName);
             Log.e("HOOK", "binder = " + mRemoteBinder);
+            Log.e("HOOK", "binder alive = " + (mRemoteBinder != null ? mRemoteBinder.isBinderAlive() : "null"));
+            Log.e("HOOK", "localBinder = " + mLocalBinder);
+            Log.e("HOOK", "thread = " + Thread.currentThread().getName());
 
             if (mRemoteBinder != null && mRemoteBinder.isBinderAlive()) {
                 // Register our local binder with the daemon (transaction code 0)
                 Parcel data = Parcel.obtain();
                 Parcel reply = Parcel.obtain();
                 data.writeStrongBinder(mLocalBinder);
+                Log.e("HOOK", "transact(0) calling...");
                 mRemoteBinder.transact(0, data, reply, 0);
                 int status = reply.readInt();
+                Log.e("HOOK", "transact(0) status=" + status);
                 data.recycle();
                 reply.recycle();
                 mStatus = 1;
+                Log.e("HOOK", "transact(0) done, mStatus=1");
             } else {
                 mStatus = 0;
+                Log.e("HOOK", "binder null or dead");
             }
         } catch (Exception ex) {
-            Log.e(TAG, "service " + ex.getMessage());
+            Log.e(TAG, "service error: " + ex.getMessage(), ex);
             mStatus = 0;
         }
         return mRemoteBinder;
