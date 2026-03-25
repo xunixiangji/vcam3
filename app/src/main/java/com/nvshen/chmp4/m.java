@@ -728,11 +728,13 @@ public class m extends Fragment {
         View view = getView();
         if (view == null) return;
 
-        // Update camera replace status
+        // Update camera replace status — check if hook is loaded in cameraserver
+        // Demo: turns green when hook is active, not when initchmp4 process is running
         TextView replaceStatus = (TextView) view.findViewById(R.id.textView_camera_replace_status);
         if (replaceStatus != null) {
-            boolean running = q1(getActivity());
-            if (running) {
+            com.nvshen.chmp4.k sm = com.nvshen.chmp4.k.c();
+            boolean hookActive = (sm.mRemoteBinder != null && sm.mRemoteBinder.isBinderAlive());
+            if (hookActive) {
                 replaceStatus.setText(R.string.setting_replace_success);
                 replaceStatus.setTextColor(-16711936); // green
             } else {
@@ -752,10 +754,12 @@ public class m extends Fragment {
             com.nvshen.chmp4.k sm = com.nvshen.chmp4.k.c();
             boolean wasDisconnected = (sm.mRemoteBinder == null || !sm.mRemoteBinder.isBinderAlive());
 
-            // DEMO: every cycle logs selinux + tries binder
-            Log.e("HOOK", "selinux " + (isSelinuxEnforcing() ? "1" : "0"));
-            sm.b();
-            Log.e("HOOK", "binder = " + sm.mRemoteBinder);
+            // DEMO: only try b() when binder not connected. Once connected, stop polling.
+            if (wasDisconnected) {
+                Log.e("HOOK", "selinux " + (isSelinuxEnforcing() ? "1" : "0"));
+                sm.b();
+                Log.e("HOOK", "binder = " + sm.mRemoteBinder);
+            }
 
             if (wasDisconnected && sm.mRemoteBinder != null && sm.mRemoteBinder.isBinderAlive()) {
                 // Binder newly connected — re-send video path
@@ -779,6 +783,15 @@ public class m extends Fragment {
                 playerStatus.setText(R.string.setting_player_stop);
                 playerStatus.setTextColor(-65536); // red
             }
+        }
+
+        // DEMO: 播放 button only enabled when 替换相机 succeeded (binder connected)
+        Button btnStartPlayer = (Button) view.findViewById(R.id.button_start_player);
+        if (btnStartPlayer != null) {
+            com.nvshen.chmp4.k sm2 = com.nvshen.chmp4.k.c();
+            boolean hookActive = (sm2.mRemoteBinder != null && sm2.mRemoteBinder.isBinderAlive());
+            int days = com.nvshen.chmp4.d.B().D();
+            btnStartPlayer.setEnabled(hookActive && days > 0);
         }
 
         // Update CDKey / expiration info
@@ -1125,6 +1138,8 @@ public class m extends Fragment {
         Application app = activity.getApplication();
 
         // ---- "Replace Camera" (inject) button ----
+        // DEMO 22.png: shows "激活码已过期或未激活" if not activated
+        // DEMO 29.png: shows ProgressDialog "正在替换，请稍等..." during injection
         Button btnSettings = (Button) view.findViewById(R.id.button_settings);
         if (btnSettings != null) {
             final Application finalApp = app;
@@ -1132,7 +1147,19 @@ public class m extends Fragment {
             btnSettings.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    // DEMO: check activation before allowing replace
+                    int days = com.nvshen.chmp4.d.B().D();
+                    if (days <= 0) {
+                        com.nvshen.chmp4.d.B().Y("激活码已过期或未激活");
+                        return;
+                    }
                     Log.d(TAG, "button_settings: Replace Camera clicked");
+                    // DEMO 29.png: show progress dialog during injection
+                    android.app.ProgressDialog pd = new android.app.ProgressDialog(finalActivity);
+                    pd.setMessage("正在替换，请稍等...");
+                    pd.setCancelable(false);
+                    pd.show();
+                    com.nvshen.chmp4.d.B().mProgressDialog = pd;
                     h handler = new h(finalApp, finalActivity);
                     handler.a(null, null);
                 }

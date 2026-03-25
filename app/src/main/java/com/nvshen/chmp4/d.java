@@ -149,6 +149,11 @@ public class d {
      */
     public void K(s2.b.e shellResult) {
         a0();  // clearStatus()
+        // Dismiss ProgressDialog if showing (DEMO 29.png)
+        if (mProgressDialog != null && mProgressDialog.isShowing()) {
+            try { mProgressDialog.dismiss(); } catch (Exception e) {}
+            mProgressDialog = null;
+        }
         int exitCode = shellResult.a();  // getExitCode()
         String stdoutStr = shellResult.c();
         if (stdoutStr != null && stdoutStr.length() > 0) {
