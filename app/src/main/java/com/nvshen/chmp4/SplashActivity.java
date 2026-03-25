@@ -40,22 +40,77 @@ public class SplashActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // BYTECODE [entry 110]: Log "----------begin:" + intent flags
+        Log.e("HOOK", "----------begin:" + getIntent().getFlags());
+
         setContentView(R.layout.activity_splash);
-        // Start root check
+
+        // LOGCAT CONFIRMED: demo requests storage permissions in SplashActivity
+        // A13 logcat: GrantPermissionsViewModel grants READ_EXTERNAL_STORAGE before root check
+        requestStoragePermission();
+    }
+
+    /**
+     * Request storage permission then proceed to root check
+     * LOGCAT CONFIRMED (A13 demo):
+     *   10:42:59 permissioncontroller appears on SplashActivity
+     *   10:43:01 READ_EXTERNAL_STORAGE + READ_MEDIA_VIDEO granted
+     */
+    private void requestStoragePermission() {
+        if (Build.VERSION.SDK_INT >= 33) {
+            // Android 13+: need READ_MEDIA_VIDEO, READ_MEDIA_IMAGES
+            if (checkSelfPermission(android.Manifest.permission.READ_MEDIA_VIDEO) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[]{
+                    android.Manifest.permission.READ_MEDIA_VIDEO,
+                    android.Manifest.permission.READ_MEDIA_IMAGES,
+                    android.Manifest.permission.READ_MEDIA_AUDIO
+                }, 1);
+                return;
+            }
+        } else {
+            // Android 12 and below
+            if (checkSelfPermission(android.Manifest.permission.READ_EXTERNAL_STORAGE) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[]{
+                    android.Manifest.permission.READ_EXTERNAL_STORAGE,
+                    android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+                }, 1);
+                return;
+            }
+        }
+        // Permissions already granted — proceed to root check
         I();
     }
 
     /**
-     * I() - initSetup: try to get root via "su" command
-     * This triggers Magisk/KSU authorization prompt
+     * I() - initSetup: check saved SU path first, then try root
+     * BYTECODE CONFIRMED [entry 112]:
+     *   pc=33: Activity.getPreferences() → getString("","") → check saved SU path
+     *   pc=45: String.isEmpty() → if not empty, use saved path
+     *   pc=51: new File(suPath) → File.exists() → verify SU binary exists
+     * LOGCAT CONFIRMED: demo requests READ_EXTERNAL_STORAGE in SplashActivity
      */
     private void I() {
+        // BYTECODE [entry 112 pc=33]: check saved SU path from preferences
+        String savedSuPath = getPreferences(0).getString("su_path", "");
+        if (!savedSuPath.isEmpty() && new java.io.File(savedSuPath).exists()) {
+            // Saved SU path valid — skip dialog, go straight to root check
+            Log.d(TAG, "Using saved SU path: " + savedSuPath);
+            tryRoot(savedSuPath);
+            return;
+        }
+
+        // No saved path — try default "su"
+        tryRoot("su");
+    }
+
+    /** Try root with given SU path */
+    private void tryRoot(final String suPath) {
         new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    // Try "su" - this triggers Magisk/KSU auth dialog
-                    Process process = Runtime.getRuntime().exec("su");
+                    Process process = Runtime.getRuntime().exec(suPath);
                     process.getOutputStream().write("id\n".getBytes());
                     process.getOutputStream().write("exit\n".getBytes());
                     process.getOutputStream().flush();
@@ -66,14 +121,15 @@ public class SplashActivity extends AppCompatActivity {
                     reader.close();
 
                     if (exitCode == 0 && output != null && output.contains("uid=0")) {
-                        // Root granted! Proceed with setup
-                        J("su");
+                        // Root granted! Save SU path for next launch
+                        // BYTECODE [entry 112]: uses getPreferences to persist
+                        getPreferences(0).edit().putString("su_path", suPath).apply();
+                        J(suPath);
                     } else {
-                        // Root denied or not available
                         M();
                     }
                 } catch (Exception e) {
-                    Log.e(TAG, "Root check failed", e);
+                    Log.e(TAG, "Root check failed with: " + suPath, e);
                     M();
                 }
             }
@@ -142,33 +198,15 @@ public class SplashActivity extends AppCompatActivity {
                     input.setHint("\u8bf7\u8f93\u5165su\u8def\u5f84"); // 请输入su路径
                     builder.setView(input);
 
-                    // ✔ button - try with custom su path
+                    // ✔ button - try with custom su path, save if successful
                     builder.setPositiveButton("\u2714", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             final String suPath = input.getText().toString().trim();
                             if (!suPath.isEmpty()) {
                                 dialog.dismiss();
-                                new Thread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        try {
-                                            Process p = Runtime.getRuntime().exec(suPath);
-                                            p.getOutputStream().write("id\n".getBytes());
-                                            p.getOutputStream().write("exit\n".getBytes());
-                                            p.getOutputStream().flush();
-                                            int code = p.waitFor();
-                                            if (code == 0) {
-                                                J(suPath);
-                                            } else {
-                                                M(); // show dialog again
-                                            }
-                                        } catch (Exception e2) {
-                                            Log.e(TAG, "Custom su failed", e2);
-                                            M();
-                                        }
-                                    }
-                                }).start();
+                                // BYTECODE [entry 112]: uses tryRoot which saves path on success
+                                tryRoot(suPath);
                             }
                         }
                     });
@@ -195,7 +233,8 @@ public class SplashActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == 1) {
-            I(); // retry after permission grant
+            // Permission dialog closed — proceed to root check regardless of result
+            I();
         }
     }
 
