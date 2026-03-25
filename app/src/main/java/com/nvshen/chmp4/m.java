@@ -743,8 +743,22 @@ public class m extends Fragment {
             // Video path is sent only when user clicks 播放 button
 
             // Auto retry once if injection done but binder still null
-            // No auto-retry — it kills the daemon before it can register binder
-            // Demo's single injection + polling is enough
+            // DEMO: auto-retry ONCE, only after injection completed + delay
+            // Must check CHMP4 process exists before retrying (avoid killing running daemon)
+            if (mInjectionDone && !mRetryDone && !hookActive) {
+                // Check if CHMP4 play is already running — if yes, don't retry (just wait for binder)
+                try {
+                    s2.b.e chk = s2.b.I("pgrep -f 'CHMP4 play'");
+                    boolean daemonAlive = (chk != null && chk.a() == 0);
+                    if (!daemonAlive) {
+                        // Daemon not running → retry once
+                        mRetryDone = true;
+                        Log.e("HOOK", "auto-retry: daemon dead, calling r1() again");
+                        r1();
+                    }
+                    // Daemon alive but binder not registered yet → just keep polling
+                } catch (Exception e) {}
+            }
         }
 
         TextView replaceStatus = (TextView) view.findViewById(R.id.textView_camera_replace_status);
