@@ -803,17 +803,13 @@ public class d {
         return "";
     }
 
-    /** getServiceName() - returns binder service name
-     *  DAEMON SOURCE [binder_service.cpp line 32-47]:
-     *    const char* custom_name = getenv("nservice");
-     *    Default: "Video2CameraService" (when nservice not set)
-     *  DEVICE CONFIRMED: service list shows "Video2CameraService: []"
-     *  Demo uses dynamic name via nservice env var, but our pure-Java version
-     *  can't set env vars in the injected cameraserver process, so daemon
-     *  falls back to default "Video2CameraService".
+    /** getServiceName() - returns dynamic binder service name
+     *  BYTECODE CONFIRMED [entry 60 o()]: generates "A" + 8 random chars, saved to SharedPrefs
+     *  DAEMON: reads nservice env var (set by chmp4.sh from this value)
+     *  App and daemon use the SAME dynamic name for binder service registration
      */
     public String getServiceName() {
-        return "Video2CameraService";
+        return this.mServiceName;
     }
 
     /** getServerTime() */
