@@ -19,22 +19,12 @@ android {
         }
     }
 
-    signingConfigs {
-        // Use debug keystore for release builds (avoids needing a separate keystore)
-        // MT Manager can re-sign later if needed
-        release {
-            storeFile file(System.getProperty("user.home") + "/.android/debug.keystore")
-            storePassword "android"
-            keyAlias "androiddebugkey"
-            keyPassword "android"
-        }
-    }
-
     buildTypes {
         release {
             minifyEnabled false
-            signingConfig signingConfigs.release
-            // Ensure NOT debuggable — critical for CHMP4 binary
+            // Use debug signing for CI (MT Manager re-signs for production)
+            signingConfig signingConfigs.debug
+            // CRITICAL: must NOT be debuggable — CHMP4 binary checks this via dumpsys
             debuggable false
         }
         debug {
