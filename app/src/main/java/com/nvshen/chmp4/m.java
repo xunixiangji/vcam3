@@ -1064,15 +1064,10 @@ public class m extends Fragment {
             "export nservice=%s; export policybin=supolicy; export MYUA=%s; export URLINDEX=%d; ",
             serviceName, myua, api.mUrlIndex);
 
-        // Clean up ALL old monitors and daemons before starting fresh
-        // Then run chmp4.sh which starts new daemon + monitor
-        // First daemon gets stuck (hook not ready), kill it after 5s
-        // Monitor detects death → restarts → new daemon finds hook → works!
-        String cleanup = "pkill -9 -f 'CHMP4' 2>/dev/null; pkill -9 -f 'sh -s initchmp4' 2>/dev/null; sleep 1; ";
-        String killStuck = "; sleep 8; pgrep -f 'CHMP4 play' | xargs kill -9 2>/dev/null";
-        String command = cleanup + selinuxCmd + envSetup + String.format(
+        // Simple: just run chmp4.sh like demo does. No extra kill/restart.
+        String command = selinuxCmd + envSetup + String.format(
             "%s/sh %s/chmp4.sh initchmp4 %d %d %s '%s' %s",
-            cacheDir, cacheDir, remain, now, token, mp4file, filterStr) + killStuck;
+            cacheDir, cacheDir, remain, now, token, mp4file, filterStr);
 
         // DEMO CONFIRMED: logs env vars with HOOK tag
         Log.d("HOOK", envSetup);

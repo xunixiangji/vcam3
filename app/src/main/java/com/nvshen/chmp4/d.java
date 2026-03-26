@@ -170,13 +170,9 @@ public class d {
             }
         }
         if (shellResult.a() == 0) {
-            // r1() command killed stuck daemon at the end.
-            // Monitor will restart it in ~10 seconds.
-            // Reset binder and let polling loop find the new daemon.
-            Log.e("HOOK", "K() exit=0, waiting for monitor to restart daemon...");
-            k.c().mRemoteBinder = null;
-            k.c().mStatus = 0;
-            // Don't call b() yet — wait for polling to find new daemon
+            Y(this.mContext.getString(com.telegram.a1064.R.string.replace_camera_success));
+            Log.e("HOOK", "K() exit=0, calling k.c().b()");
+            k.c().b();
         } else {
             Y(this.mContext.getString(com.telegram.a1064.R.string.replace_camera_fail) + exitCode);
         }
