@@ -99,8 +99,10 @@ public class k {
                 Log.e("HOOK", "transact(0) status=" + status);
                 data.recycle();
                 reply.recycle();
-                mStatus = 1;
-                Log.e("HOOK", "transact(0) done, mStatus=1");
+                // Don't hardcode mStatus=1. Set based on connection state.
+                // Demo shows checkReplace=3/3 after connect. mStatus affects d() transact.
+                mStatus = 3;
+                Log.e("HOOK", "transact(0) done, mStatus=" + mStatus);
             } else {
                 mStatus = 0;
                 Log.e("HOOK", "binder null or dead");
