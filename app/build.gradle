@@ -9,7 +9,7 @@ android {
     defaultConfig {
         applicationId "com.telegram.a1064"
         minSdk 25
-        targetSdk 31
+        targetSdk 30
         versionCode 20329
         versionName "2.0.40"
 
