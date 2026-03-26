@@ -11,7 +11,7 @@ android {
         minSdk 25
         targetSdk 35
         versionCode 20329
-        versionName "2.0.40-reversed"
+        versionName "2.0.40"
 
         ndk {
             // Support both 32-bit and 64-bit

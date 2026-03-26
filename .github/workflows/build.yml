@@ -41,7 +41,7 @@ jobs:
       - name: Build with full output
         run: |
           chmod +x gradlew
-          ./gradlew assembleDebug 2>&1 | tee build_output.txt
+          ./gradlew assembleRelease 2>&1 | tee build_output.txt
           echo ""
           echo "=== ERRORS ==="
           grep -i "error" build_output.txt | head -40
@@ -64,6 +64,6 @@ jobs:
           name: vcam-pure-java-apk
           path: |
             app/build/outputs/apk/**/*.apk
-            app/build/outputs/apk/debug/*.apk
+            app/build/outputs/apk/release/*.apk
           if-no-files-found: warn
           retention-days: 30
