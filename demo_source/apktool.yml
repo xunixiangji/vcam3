@@ -1,0 +1,17 @@
+version: 2.12.1
+apkFileName: demo.apk
+usesFramework:
+  ids:
+  - 1
+sdkInfo:
+  minSdkVersion: 25
+  targetSdkVersion: 30
+packageInfo:
+  forcedPackageId: 127
+versionInfo:
+  versionCode: 20329
+  versionName: 2.0.40
+doNotCompress:
+- arsc
+- ogg
+- png

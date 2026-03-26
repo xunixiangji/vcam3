@@ -1,0 +1,45 @@
+name: Build from Demo Source (apktool)
+
+on:
+  push:
+    branches: [ main, pure-java ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Install apktool
+        run: |
+          wget -q https://bitbucket.org/iBotPeaches/apktool/downloads/apktool_2.9.3.jar -O apktool.jar
+          echo "apktool downloaded"
+
+      - name: Build APK from demo_source
+        run: |
+          java -jar apktool.jar b demo_source -o vcam-demo-base.apk 2>&1 | tail -10
+          ls -la vcam-demo-base.apk
+
+      - name: Sign APK
+        run: |
+          # Generate a keystore
+          keytool -genkeypair -v -keystore debug.keystore -alias key0 -keyalg RSA -keysize 2048 -validity 10000 -storepass android -keypass android -dname "CN=Debug"
+          # Sign with apksigner
+          ${ANDROID_HOME}/build-tools/$(ls ${ANDROID_HOME}/build-tools/ | tail -1)/apksigner sign --ks debug.keystore --ks-pass pass:android --key-pass pass:android vcam-demo-base.apk
+          echo "Signed!"
+          ls -la vcam-demo-base.apk
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: vcam-demo-base-apk
+          path: vcam-demo-base.apk
+          retention-days: 30
