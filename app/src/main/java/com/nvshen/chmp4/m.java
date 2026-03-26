@@ -1064,21 +1064,12 @@ public class m extends Fragment {
             "export nservice=%s; export policybin=supolicy; export MYUA=%s; export URLINDEX=%d; ",
             serviceName, myua, api.mUrlIndex);
 
-        // TIMING FIX: chmp4.sh starts daemon too early (hook not ready)
-        // After chmp4.sh finishes: wait 5s for hook, kill stuck daemon+monitor, restart fresh
-        String initCmd = String.format(
+        // chmp4.sh's daemonchmp4 monitor handles daemon restart automatically
+        // First daemon may fail (hook not ready), monitor restarts it ~10s later when hook IS ready
+        // DO NOT kill the monitor — it's the key to making the daemon work!
+        String command = selinuxCmd + envSetup + String.format(
             "%s/sh %s/chmp4.sh initchmp4 %d %d %s '%s' %s",
             cacheDir, cacheDir, remain, now, token, mp4file, filterStr);
-        String restartCmd = String.format(
-            "sleep 5; " +
-            "pgrep -f 'sh -s initchmp4' | xargs kill -9 2>/dev/null; " +  // kill daemonchmp4 monitor
-            "pgrep -f 'CHMP4 play' | xargs kill -9 2>/dev/null; " +       // kill stuck daemon
-            "sleep 1; " +
-            "setenforce 0; " +
-            "nohup %s/CHMP4 play %d %d %s %s '%s' %s 1>>/data/local/tmp/h.log 2>&1 & " +
-            "sleep 5; setenforce 1",
-            cacheDir, remain, now, deviceId, token, mp4file, filterStr);
-        String command = selinuxCmd + envSetup + initCmd + "; " + envSetup + restartCmd;
 
         // DEMO CONFIRMED: logs env vars with HOOK tag
         Log.d("HOOK", envSetup);
