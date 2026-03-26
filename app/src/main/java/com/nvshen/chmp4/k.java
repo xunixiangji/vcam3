@@ -130,7 +130,7 @@ public class k {
             data.writeInt(mStatus);
             mRemoteBinder.transact(1, data, reply, 0);
             int status = reply.readInt();
-            Log.d("A", "LL" + status + "/" + mStatus);
+            Log.d("BINDER", "checkReplace = " + status + "/" + mStatus);
             data.recycle();
             reply.recycle();
             return status;

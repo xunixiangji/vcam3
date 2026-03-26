@@ -779,12 +779,15 @@ public class m extends Fragment {
         }
 
         // === 播放视频 status ===
-        // Demo uses binder d() return value to check player state
-        // d() logs "LL<status>/<mStatus>" — status > 0 means player running
+        // DEMO VERIFIED: d() returns checkReplace value:
+        //   0     = binder not connected
+        //   3/3   = replaced but not playing → RED, play button enabled
+        //   259/3 = playing → GREEN, play button disabled
+        // Threshold: > 3 means playing
         TextView playerStatus = (TextView) view.findViewById(R.id.textView_player_status);
         if (playerStatus != null) {
             int playerState = hookActive ? sm.d() : 0;
-            if (playerState > 0) {
+            if (playerState > 3) {
                 playerStatus.setText(R.string.setting_player_running);
                 playerStatus.setTextColor(-16711936); // green
             } else {
@@ -793,11 +796,11 @@ public class m extends Fragment {
             }
         }
 
-        // DEMO 54.png: 播放 enabled when 替换成功 AND player not running
+        // DEMO VERIFIED: 播放 enabled when replaced (hookActive) AND not playing (d()<=3)
         Button btnStartPlayer2 = (Button) view.findViewById(R.id.button_start_player);
         if (btnStartPlayer2 != null) {
             int ps = hookActive ? sm.d() : 0;
-            btnStartPlayer2.setEnabled(hookActive && ps <= 0);
+            btnStartPlayer2.setEnabled(hookActive && ps <= 3);
         }
 
         // Update CDKey / expiration info
