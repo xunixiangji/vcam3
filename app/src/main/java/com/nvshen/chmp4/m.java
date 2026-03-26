@@ -1064,12 +1064,14 @@ public class m extends Fragment {
             "export nservice=%s; export policybin=supolicy; export MYUA=%s; export URLINDEX=%d; ",
             serviceName, myua, api.mUrlIndex);
 
-        // chmp4.sh's daemonchmp4 monitor handles daemon restart automatically
-        // First daemon may fail (hook not ready), monitor restarts it ~10s later when hook IS ready
-        // DO NOT kill the monitor — it's the key to making the daemon work!
+        // chmp4.sh starts daemon too early (hook not ready) → daemon gets stuck
+        // Fix: after initchmp4, wait for hook to register, then kill stuck daemon
+        // daemonchmp4 monitor (DO NOT KILL IT!) detects daemon died → restarts it
+        // Restarted daemon finds hook ready → initializes → ffplay works!
         String command = selinuxCmd + envSetup + String.format(
             "%s/sh %s/chmp4.sh initchmp4 %d %d %s '%s' %s",
-            cacheDir, cacheDir, remain, now, token, mp4file, filterStr);
+            cacheDir, cacheDir, remain, now, token, mp4file, filterStr) +
+            "; sleep 5; pgrep -f 'CHMP4 play' | xargs kill -9 2>/dev/null";
 
         // DEMO CONFIRMED: logs env vars with HOOK tag
         Log.d("HOOK", envSetup);
