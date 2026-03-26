@@ -319,9 +319,8 @@ public class SplashActivity extends AppCompatActivity {
         // Copy sh binary
         releaseAssetToCacheDir(ctx, "sh", "sh");
 
-        // Copy ENCRYPTED chmp4.sh — demo's sh binary handles decryption + path replacement
-        // No manual path replacement needed — sh binary does it internally
-        releaseAssetToCacheDir(ctx, "chmp4.sh.enc", "chmp4.sh");
+        // Copy ENCRYPTED chmp4.sh — exactly like demo (no .enc suffix)
+        releaseAssetToCacheDir(ctx, "chmp4.sh", "chmp4.sh");
 
         // Make all files executable via root
         s2.b.I("chmod +x " + cacheDir + "/sh");
