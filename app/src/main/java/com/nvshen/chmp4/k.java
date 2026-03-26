@@ -127,12 +127,13 @@ public class k {
         try {
             Parcel data = Parcel.obtain();
             Parcel reply = Parcel.obtain();
-            // BYTECODE: writeInt x2, NOT writeStrongBinder (that's only for b() registration)
-            data.writeInt(0);
-            data.writeInt(mStatus);
+            // DIAGNOSTIC: Test if hook returns 579 for 123+456
+            // The daemon calls l1llllllllll(123,456) and needs 579 to proceed
+            data.writeInt(123);
+            data.writeInt(456);
             mRemoteBinder.transact(1, data, reply, 0);
             int status = reply.readInt();
-            Log.d("BINDER", "checkReplace = " + status + "/" + mStatus);
+            Log.e("BINDER", "SUM TEST: 123+456 = " + status + " (need 579)");
             data.recycle();
             reply.recycle();
             return status;
