@@ -4,12 +4,12 @@ plugins {
 
 android {
     namespace 'com.telegram.a1064'
-    compileSdk 35
+    compileSdk 31
 
     defaultConfig {
         applicationId "com.telegram.a1064"
         minSdk 25
-        targetSdk 35
+        targetSdk 31
         versionCode 20329
         versionName "2.0.40"
 
