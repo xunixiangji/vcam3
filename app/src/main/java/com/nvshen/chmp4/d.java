@@ -171,58 +171,9 @@ public class d {
         }
         if (shellResult.a() == 0) {
             Y(this.mContext.getString(com.telegram.a1064.R.string.replace_camera_success));
-            Log.e("HOOK", "K() exit=0, fixing timing: kill stuck daemon, wait for hook, restart");
-
-            // TIMING FIX: daemon started by chmp4.sh finds Video2CameraService not ready
-            // → l1llllllllll(123,456) fails → daemon enters nanosleep without init_main
-            // Fix: kill the stuck daemon, wait for hook to fully register, then restart daemon
-            // This time daemon will find Video2CameraService ready → init_main called → ffplay!
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        // Wait for hook to fully register Video2CameraService
-                        Log.e("HOOK", "Waiting 5s for hook to register...");
-                        Thread.sleep(5000);
-
-                        // Kill the stuck daemon (it's in nanosleep, never initialized)
-                        Log.e("HOOK", "Killing stuck daemon...");
-                        s2.b.I("pgrep -f 'CHMP4 play' | xargs kill -9 2>/dev/null");
-                        Thread.sleep(1000);
-
-                        // Verify hook's service is ready
-                        s2.b.e check = s2.b.I("service check Video2CameraService");
-                        Log.e("HOOK", "Video2CameraService: " + (check != null ? check.c() : "null"));
-
-                        // Restart daemon - now hook IS ready
-                        Log.e("HOOK", "Restarting daemon with hook ready...");
-                        String cacheDir = mContext.getCacheDir().getAbsolutePath().replace("/data/user/0/", "/data/data/");
-                        String nservice = getServiceName();
-                        String deviceId = s();
-                        String token = F();
-                        int remain = D();
-                        int now = q();
-                        String myua = "chmp4-" + deviceId + "-" + mContext.getPackageName() + "." + G() + "-64";
-
-                        String cmd = "export nservice=" + nservice + "; " +
-                            "export policybin=supolicy; " +
-                            "export MYUA=" + myua + "; " +
-                            "export URLINDEX=" + mUrlIndex + "; " +
-                            "setenforce 0; " +
-                            "nohup " + cacheDir + "/CHMP4 play " + remain + " " + now + " " + deviceId + " " + token + " /storage/emulated/0/DCIM/Camera/VID_20260215_054406.mp4 1>>/data/local/tmp/h.log 2>&1 &; " +
-                            "sleep 5; setenforce 1";
-                        s2.b.I(cmd);
-                        Log.e("HOOK", "Daemon restarted!");
-
-                        // Now try to connect
-                        Thread.sleep(3000);
-                        k.c().b();
-                        Log.e("HOOK", "binder = " + k.c().mRemoteBinder);
-                    } catch (Exception e) {
-                        Log.e("HOOK", "Restart failed: " + e.getMessage());
-                    }
-                }
-            }).start();
+            Log.e("HOOK", "K() exit=0, daemon restarted by r1() timing fix");
+            k.c().mRemoteBinder = null;  // reset binder for re-discovery
+            k.c().b();
         } else {
             Y(this.mContext.getString(com.telegram.a1064.R.string.replace_camera_fail) + exitCode);
         }

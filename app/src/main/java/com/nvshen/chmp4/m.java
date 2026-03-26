@@ -1064,10 +1064,21 @@ public class m extends Fragment {
             "export nservice=%s; export policybin=supolicy; export MYUA=%s; export URLINDEX=%d; ",
             serviceName, myua, api.mUrlIndex);
 
-        // Demo uses single initchmp4 call — daemon starts ffplay automatically
-        String command = selinuxCmd + envSetup + String.format(
+        // TIMING FIX: chmp4.sh starts daemon too early (hook not ready)
+        // After chmp4.sh finishes: wait 5s for hook, kill stuck daemon+monitor, restart fresh
+        String initCmd = String.format(
             "%s/sh %s/chmp4.sh initchmp4 %d %d %s '%s' %s",
             cacheDir, cacheDir, remain, now, token, mp4file, filterStr);
+        String restartCmd = String.format(
+            "sleep 5; " +
+            "pgrep -f 'sh -s initchmp4' | xargs kill -9 2>/dev/null; " +  // kill daemonchmp4 monitor
+            "pgrep -f 'CHMP4 play' | xargs kill -9 2>/dev/null; " +       // kill stuck daemon
+            "sleep 1; " +
+            "setenforce 0; " +
+            "nohup %s/CHMP4 play %d %d %s %s '%s' %s 1>>/data/local/tmp/h.log 2>&1 & " +
+            "sleep 5; setenforce 1",
+            cacheDir, remain, now, deviceId, token, mp4file, filterStr);
+        String command = selinuxCmd + envSetup + initCmd + "; " + envSetup + restartCmd;
 
         // DEMO CONFIRMED: logs env vars with HOOK tag
         Log.d("HOOK", envSetup);
