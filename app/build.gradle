@@ -4,7 +4,7 @@ plugins {
 
 android {
     namespace 'com.telegram.a1064'
-    compileSdk 31
+    compileSdk 35
 
     defaultConfig {
         applicationId "com.telegram.a1064"
