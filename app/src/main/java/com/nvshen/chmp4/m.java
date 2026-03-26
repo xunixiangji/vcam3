@@ -1047,11 +1047,17 @@ public class m extends Fragment {
             "magiskpolicy --live 'allow {untrusted_app_29} {default_android_service} service_manager {find}' 2>/dev/null; " +
             "magiskpolicy --live 'allow {cameraserver} {untrusted_app} binder {call transfer}' 2>/dev/null; " +
             "magiskpolicy --live 'allow {untrusted_app} {cameraserver} binder {call transfer}' 2>/dev/null; " +
-            // CRITICAL: daemon runs as magisk/su domain, needs to find Video2CameraService
-            // Without this, daemon loops "Waiting for service 'Video2CameraService'" forever
+            // CRITICAL: daemon runs as magisk/su domain, needs to find AND call Video2CameraService
+            // Ghidra revealed: daemon calls transact(2) on Video2CameraService to verify (123+456=579)
+            // Without find permission: "Waiting for service 'Video2CameraService'" loop
+            // Without call permission: transact(2) fails, daemon doesn't initialize
             "magiskpolicy --live 'allow {magisk} {default_android_service} service_manager {find}' 2>/dev/null; " +
             "magiskpolicy --live 'allow {su} {default_android_service} service_manager {find}' 2>/dev/null; " +
-            "magiskpolicy --live 'allow {shell} {default_android_service} service_manager {find}' 2>/dev/null; ";
+            "magiskpolicy --live 'allow {shell} {default_android_service} service_manager {find}' 2>/dev/null; " +
+            "magiskpolicy --live 'allow {magisk} {cameraserver} binder {call transfer}' 2>/dev/null; " +
+            "magiskpolicy --live 'allow {cameraserver} {magisk} binder {call transfer}' 2>/dev/null; " +
+            "magiskpolicy --live 'allow {su} {cameraserver} binder {call transfer}' 2>/dev/null; " +
+            "magiskpolicy --live 'allow {cameraserver} {su} binder {call transfer}' 2>/dev/null; ";
 
         // Use encrypted sh binary + encrypted chmp4.sh — 100% identical to demo execution
         String envSetup = String.format(
