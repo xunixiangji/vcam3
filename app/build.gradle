@@ -14,8 +14,8 @@ android {
         versionName "2.0.40"
 
         ndk {
-            // Match demo: only armeabi-v7a (demo has no arm64 native libs)
-            abiFilters 'armeabi-v7a'
+            // Match demo: armeabi-v7a + x86 (demo has both, no arm64)
+            abiFilters 'armeabi-v7a', 'x86'
         }
     }
 
